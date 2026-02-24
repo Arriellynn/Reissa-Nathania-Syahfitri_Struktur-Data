@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buku Telepon</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IM+Fell+English:ital@0;1&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --cream: #f5f0e8;
+  --paper: #faf7f0;
+  --ink: #1a1208;
+  --ink2: #3d2b0d;
+  --brown: #6b3f0e;
+  --gold: #b8860b;
+  --gold2: #d4a017;
+  --red: #8b1a1a;
+  --rule: #c4a882;
+  --shadow: rgba(30,15,0,0.18);
+  --tab: #e8dcc8;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #2a1a08;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, #3d2a10 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, #1a0d04 0%, transparent 60%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 1rem;
+  font-family: 'Courier Prime', monospace;
+}
+
+/* ── HEADER ── */
+.app-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.app-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  color: var(--gold2);
+  letter-spacing: 0.06em;
+  text-shadow: 2px 2px 0 #5a3000, 0 0 30px #b8860b44;
+  line-height: 1;
+}
+.app-sub {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: #c4a882;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  margin-top: 0.3rem;
+}
+
+/* ── BOOK CONTAINER ── */
+.book {
+  width: 100%;
+  max-width: 920px;
+  background: var(--paper);
+  border-radius: 2px 6px 6px 2px;
+  box-shadow:
+    -8px 0 0 #8b5a2b,
+    -12px 0 0 #6b3f0e,
+    -16px 0 0 #5a3000,
+    8px 8px 30px rgba(0,0,0,0.5),
+    0 0 60px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Spine texture */
+.book::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 6px;
+  background: linear-gradient(to right, #8b5a2b, #c4884a, #8b5a2b);
+  z-index: 10;
+}
+
+/* ── MENU BAR ── */
+.menubar {
+  background: var(--ink);
+  display: flex;
+  align-items: stretch;
+  border-bottom: 3px solid var(--gold);
+  padding-left: 6px;
+}
+
+.menu-item {
+  position: relative;
+}
+
+.menu-trigger {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--gold2);
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  letter-spacing: 0.08em;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.menu-trigger:hover, .menu-trigger.open {
+  background: var(--brown);
+  color: #ffd96a;
+}
+.menu-trigger .underline-key { text-decoration: underline; }
+
+.dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 210px;
+  background: var(--ink);
+  border: 1px solid var(--gold);
+  border-top: none;
+  z-index: 200;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.5);
+}
+.dropdown.show { display: block; }
+
+.dd-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.5rem 1.1rem;
+  color: var(--cream);
+  font-size: 0.82rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: 'Courier Prime', monospace;
+  transition: background 0.1s;
+}
+.dd-item:hover { background: var(--brown); color: #ffd96a; }
+.dd-item .shortcut { margin-left: auto; color: var(--gold); font-size: 0.72rem; opacity: 0.8; }
+.dd-divider { border: none; border-top: 1px solid #3d2b0d; margin: 0.2rem 0; }
+
+.dd-item .icon { width: 1rem; text-align: center; font-size: 0.9rem; }
+
+/* ── TOOLBAR ── */
+.toolbar {
+  background: var(--tab);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.5rem 1rem 0.5rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.tb-btn {
+  background: var(--cream);
+  border: 1px solid var(--rule);
+  color: var(--ink2);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.tb-btn:hover { background: var(--gold2); color: white; border-color: var(--brown); }
+.tb-sep { width: 1px; height: 1.5rem; background: var(--rule); margin: 0 0.2rem; }
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-left: auto;
+  background: white;
+  border: 1px solid var(--rule);
+  padding: 0.2rem 0.5rem;
+  border-radius: 2px;
+}
+.search-box input {
+  border: none;
+  outline: none;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.82rem;
+  color: var(--ink);
+  width: 160px;
+  background: transparent;
+}
+.search-box label { font-size: 0.75rem; color: var(--brown); }
+
+/* ── ALPHA TABS ── */
+.alpha-strip {
+  display: flex;
+  background: var(--tab);
+  border-bottom: 2px solid var(--gold);
+  padding: 0 0.5rem;
+  overflow-x: auto;
+  gap: 1px;
+  padding-left: 1.5rem;
+}
+.alpha-tab {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-bottom: none;
+  color: var(--brown);
+  background: none;
+  border-radius: 3px 3px 0 0;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.alpha-tab:hover { background: var(--cream); color: var(--ink); }
+.alpha-tab.active {
+  background: var(--paper);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+.alpha-tab.all { color: var(--red); }
+
+/* ── MAIN AREA ── */
+.main-area {
+  display: flex;
+  flex: 1;
+  min-height: 480px;
+}
+
+/* Contact list */
+.contact-list {
+  width: 280px;
+  min-width: 220px;
+  border-right: 2px solid var(--rule);
+  overflow-y: auto;
+  background: var(--paper);
+  padding-left: 6px;
+}
+
+.list-group-header {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--gold);
+  padding: 0.4rem 1rem 0.1rem;
+  border-bottom: 1px solid var(--rule);
+  background: var(--cream);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-bottom: 1px dashed #e0d5c0;
+  transition: background 0.1s;
+}
+.contact-row:hover { background: #f0e8d5; }
+.contact-row.selected { background: #e8d9ba; border-left: 3px solid var(--gold); }
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--brown);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--cream);
+  flex-shrink: 0;
+  box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+}
+.contact-info { overflow: hidden; }
+.contact-name { font-weight: 700; font-size: 0.85rem; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.contact-phone { font-size: 0.72rem; color: var(--brown); }
+
+/* Detail panel */
+.detail-panel {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  position: relative;
+  background: var(--paper);
+  background-image:
+    repeating-linear-gradient(
+      transparent, transparent 27px,
+      #d6c9ab 27px, #d6c9ab 28px
+    );
+  background-position: 0 42px;
+  overflow-y: auto;
+}
+
+.detail-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--rule);
+  text-align: center;
+}
+.detail-empty .big-icon { font-size: 4rem; margin-bottom: 1rem; }
+.detail-empty p { font-family: 'IM Fell English', serif; font-style: italic; font-size: 1.1rem; }
+
+.detail-content { display: none; }
+.detail-content.show { display: block; }
+
+.detail-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: var(--brown);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 2rem;
+  color: var(--cream);
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.25);
+  margin-bottom: 0.5rem;
+}
+.detail-name {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  font-size: 1.8rem;
+  color: var(--ink);
+  margin-bottom: 0.1rem;
+}
+.detail-group {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--brown);
+  font-size: 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.4rem 1rem;
+  font-size: 0.85rem;
+  line-height: 28px;
+}
+.field-label { color: var(--brown); font-weight: 700; }
+.field-val { color: var(--ink); }
+.field-val a { color: var(--red); text-decoration: none; }
+.field-val a:hover { text-decoration: underline; }
+
+.detail-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.action-btn {
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.78rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--brown);
+  background: var(--cream);
+  color: var(--ink2);
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.12s;
+}
+.action-btn:hover { background: var(--brown); color: white; }
+.action-btn.danger { border-color: var(--red); color: var(--red); }
+.action-btn.danger:hover { background: var(--red); color: white; }
+
+/* Notes area */
+.notes-section { margin-top: 1.5rem; }
+.notes-section h4 { font-family: 'Playfair Display', serif; color: var(--brown); font-size: 0.85rem; margin-bottom: 0.3rem; }
+.notes-text {
+  font-family: 'IM Fell English', serif;
+  font-style: italic;
+  color: var(--ink2);
+  font-size: 0.9rem;
+  line-height: 1.7;
+  background: transparent;
+  border: none;
+  outline: none;
+  width: 100%;
+  resize: none;
+  background-color: transparent;
+}
+
+/* ── STATUS BAR ── */
+.statusbar {
+  background: var(--ink);
+  color: #a08060;
+  font-size: 0.7rem;
+  padding: 0.3rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  border-top: 2px solid var(--gold);
+}
+.statusbar span { color: var(--gold2); }
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 500;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+  background: var(--paper);
+  border: 2px solid var(--gold);
+  width: min(520px, 95vw);
+  box-shadow: 6px 6px 20px rgba(0,0,0,0.5);
+}
+.modal-title {
+  background: var(--ink);
+  color: var(--gold2);
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.6rem 1.2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close-btn {
+  background: none; border: none; color: var(--gold2); cursor: pointer; font-size: 1.1rem;
+}
+.modal-body { padding: 1.5rem; }
+
+.form-row { margin-bottom: 1rem; }
+.form-row label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--brown); margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.form-row input, .form-row select, .form-row textarea {
+  width: 100%;
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.9rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--rule);
+  background: white;
+  color: var(--ink);
+  outline: none;
+  border-radius: 2px;
+}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus { border-color: var(--gold); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  padding: 0.8rem 1.5rem;
+  border-top: 1px solid var(--rule);
+}
+.btn-primary {
+  background: var(--ink);
+  color: var(--gold2);
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  padding: 0.45rem 1.4rem;
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.12s;
+}
+.btn-primary:hover { background: var(--brown); }
+.btn-cancel {
+  background: none;
+  color: var(--brown);
+  font-family: 'Courier Prime', monospace;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--rule);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+.btn-cancel:hover { background: var(--cream); }
+
+/* ── TOAST ── */
+#toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--ink);
+  color: var(--gold2);
+  font-family: 'Courier Prime', monospace;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.6rem;
+  border: 1px solid var(--gold);
+  border-radius: 2px;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.4);
+  z-index: 1000;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 3px; }
+
+/* confirm modal */
+.confirm-msg { font-size: 0.95rem; color: var(--ink); margin-bottom: 1rem; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">📖 Buku Telepon</div>
+  <div class="app-sub">Direktori Kontak Pribadi</div>
+</div>
+
+<div class="book">
+  <!-- MENU BAR -->
+  <div class="menubar">
+    <div class="menu-item">
+      <button class="menu-trigger" onclick="toggleMenu('m-berkas')"><u>B</u>erkas ▾</button>
+      <div class="dropdown" id="m-berkas">
+        <button class="dd-item" onclick="openAdd(); closeMenus()"><span class="icon">✚</span> Kontak Baru <span class="shortcut">Ctrl+N</span></button>
+        <hr class="dd-divider">
+        <button class="dd-item" onclick="exportData(); closeMenus()"><span class="icon">⬇</span> Ekspor JSON <span class="shortcut">Ctrl+E</span></button>
+        <button class="dd-item" onclick="importClick(); closeMenus()"><span class="icon">⬆</span> Impor JSON <span class="shortcut">Ctrl+I</span></button>
+        <hr class="dd-divider">
+        <button class="dd-item" onclick="printView(); closeMenus()"><span class="icon">🖨</span> Cetak <span class="shortcut">Ctrl+P</span></button>
+      </div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-trigger" onclick="toggleMenu('m-edit')"><u>E</u>dit ▾</button>
+      <div class="dropdown" id="m-edit">
+        <button class="dd-item" onclick="editSelected(); closeMenus()"><span class="icon">✏</span> Ubah Kontak <span class="shortcut">Ctrl+U</span></button>
+        <button class="dd-item" onclick="deleteSelected(); closeMenus()"><span class="icon">🗑</span> Hapus Kontak <span class="shortcut">Del</span></button>
+        <hr class="dd-divider">
+        <button class="dd-item" onclick="duplicateSelected(); closeMenus()"><span class="icon">⧉</span> Duplikasi <span class="shortcut">Ctrl+D</span></button>
+      </div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-trigger" onclick="toggleMenu('m-lihat')"><u>L</u>ihat ▾</button>
+      <div class="dropdown" id="m-lihat">
+        <button class="dd-item" onclick="sortBy('nama'); closeMenus()"><span class="icon">🔤</span> Urut A–Z</button>
+        <button class="dd-item" onclick="sortBy('nama_z'); closeMenus()"><span class="icon">🔤</span> Urut Z–A</button>
+        <button class="dd-item" onclick="sortBy('grup'); closeMenus()"><span class="icon">📁</span> Urut Grup</button>
+        <hr class="dd-divider">
+        <button class="dd-item" onclick="filterFav(); closeMenus()"><span class="icon">⭐</span> Favorit Saja</button>
+        <button class="dd-item" onclick="filterAll(); closeMenus()"><span class="icon">👁</span> Tampilkan Semua</button>
+      </div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-trigger" onclick="toggleMenu('m-alat')"><u>A</u>lat ▾</button>
+      <div class="dropdown" id="m-alat">
+        <button class="dd-item" onclick="statsModal(); closeMenus()"><span class="icon">📊</span> Statistik</button>
+        <button class="dd-item" onclick="findDuplicates(); closeMenus()"><span class="icon">🔍</span> Cari Duplikat</button>
+        <hr class="dd-divider">
+        <button class="dd-item" onclick="clearAllData(); closeMenus()"><span class="icon">⚠</span> Hapus Semua Data</button>
+      </div>
+    </div>
+    <div class="menu-item">
+      <button class="menu-trigger" onclick="toggleMenu('m-bantuan')"><u>B</u>antuan ▾</button>
+      <div class="dropdown" id="m-bantuan">
+        <button class="dd-item" onclick="showHelp(); closeMenus()"><span class="icon">?</span> Pintasan Keyboard</button>
+        <button class="dd-item" onclick="showAbout(); closeMenus()"><span class="icon">ℹ</span> Tentang</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <button class="tb-btn" onclick="openAdd()">✚ Tambah</button>
+    <button class="tb-btn" onclick="editSelected()">✏ Ubah</button>
+    <button class="tb-btn" onclick="deleteSelected()">🗑 Hapus</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="sortBy('nama')">A→Z</button>
+    <button class="tb-btn" onclick="filterFav()">⭐ Favorit</button>
+    <button class="tb-btn" onclick="filterAll()">Semua</button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="exportData()">⬇ Ekspor</button>
+    <div class="search-box">
+      <label>🔍</label>
+      <input type="text" id="search-input" placeholder="Cari nama, telepon..." oninput="searchContacts()">
+    </div>
+  </div>
+
+  <!-- ALPHA TABS -->
+  <div class="alpha-strip" id="alpha-strip">
+    <button class="alpha-tab all active" onclick="filterAlpha('ALL')">Semua</button>
+    <button class="alpha-tab" onclick="filterAlpha('⭐')">⭐</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <div class="contact-list" id="contact-list"></div>
+    <div class="detail-panel" id="detail-panel">
+      <div class="detail-empty" id="detail-empty">
+        <div class="big-icon">📖</div>
+        <p>Pilih kontak untuk melihat detail</p>
+      </div>
+      <div class="detail-content" id="detail-content"></div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <div id="status-left">Total: <span id="stat-total">0</span> kontak</div>
+    <div id="status-right">Buku Telepon v1.0</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<!-- FORM MODAL -->
+<div class="modal-overlay" id="form-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="form-modal-title">Tambah Kontak Baru</span>
+      <button class="modal-close-btn" onclick="closeFormModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Nama Depan *</label>
+          <input id="f-nama-depan" type="text" placeholder="contoh: Budi">
+        </div>
+        <div class="form-row">
+          <label>Nama Belakang</label>
+          <input id="f-nama-belakang" type="text" placeholder="contoh: Santoso">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>No. Telepon *</label>
+          <input id="f-telepon" type="text" placeholder="08xx-xxxx-xxxx">
+        </div>
+        <div class="form-row">
+          <label>No. HP / WA</label>
+          <input id="f-hp" type="text" placeholder="08xx-xxxx-xxxx">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Email</label>
+          <input id="f-email" type="email" placeholder="contoh@email.com">
+        </div>
+        <div class="form-row">
+          <label>Grup</label>
+          <select id="f-grup">
+            <option value="Umum">Umum</option>
+            <option value="Keluarga">Keluarga</option>
+            <option value="Teman">Teman</option>
+            <option value="Kantor">Kantor</option>
+            <option value="Bisnis">Bisnis</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Alamat</label>
+        <input id="f-alamat" type="text" placeholder="Jl. Contoh No. 1, Kota">
+      </div>
+      <div class="form-row">
+        <label>Catatan</label>
+        <textarea id="f-catatan" rows="2" placeholder="Catatan tambahan..."></textarea>
+      </div>
+      <div class="form-row">
+        <label><input type="checkbox" id="f-fav" style="width:auto;margin-right:0.4rem"> Tandai sebagai Favorit ⭐</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeFormModal()">Batal</button>
+      <button class="btn-primary" onclick="saveContact()">💾 Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- GENERIC MODAL -->
+<div class="modal-overlay" id="info-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="info-modal-title">Info</span>
+      <button class="modal-close-btn" onclick="closeInfoModal()">✕</button>
+    </div>
+    <div class="modal-body" id="info-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-primary" onclick="closeInfoModal()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span id="confirm-title">Konfirmasi</span>
+      <button class="modal-close-btn" onclick="closeConfirm()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="confirm-msg" id="confirm-msg"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeConfirm()">Batal</button>
+      <button class="btn-primary" id="confirm-ok">Ya, Lanjutkan</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+
+<script>
+// ─────────────────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────────────────
+const STORAGE_KEY = 'buku_telepon_v1';
+
+const SEED_DATA = [
+  { id:1, namaDepan:'Ahmad', namaBelakang:'Fauzi', telepon:'021-4567-8901', hp:'0812-3456-7890', email:'ahmad.fauzi@email.com', grup:'Keluarga', alamat:'Jl. Merdeka No. 12, Jakarta', catatan:'Adik kandung', favorit:true },
+  { id:2, namaDepan:'Budi', namaBelakang:'Santoso', telepon:'031-2345-6789', hp:'0856-7890-1234', email:'budi.s@kantor.co.id', grup:'Kantor', alamat:'Jl. Sudirman Blok B-5, Surabaya', catatan:'Kepala divisi marketing', favorit:false },
+  { id:3, namaDepan:'Citra', namaBelakang:'Wulandari', telepon:'022-3456-7890', hp:'0877-5678-9012', email:'citra.w@gmail.com', grup:'Teman', alamat:'Perumahan Griya Indah No. 7, Bandung', catatan:'Teman SMA', favorit:true },
+  { id:4, namaDepan:'Dewi', namaBelakang:'Kusuma', telepon:'024-4567-1234', hp:'0895-1234-5678', email:'dewikuslama@yahoo.com', grup:'Keluarga', alamat:'Jl. Pemuda No. 23, Semarang', catatan:'Sepupu dari paman', favorit:false },
+  { id:5, namaDepan:'Eko', namaBelakang:'Prasetyo', telepon:'031-5678-2345', hp:'0813-9876-5432', email:'eko.p@bisnis.com', grup:'Bisnis', alamat:'Ruko Sentra Bisnis Kav. 3, Surabaya', catatan:'Rekanan pemasok', favorit:false },
+  { id:6, namaDepan:'Fajar', namaBelakang:'Nugroho', telepon:'021-6789-3456', hp:'0821-4567-8901', email:'fajar.n@gmail.com', grup:'Teman', alamat:'Apartemen Menteng Blok A Lt.5, Jakarta', catatan:'Teman kuliah', favorit:true },
+  { id:7, namaDepan:'Galih', namaBelakang:'Saputra', telepon:'0274-7890-4567', hp:'0857-3456-7890', email:'galih.s@perusahaan.id', grup:'Kantor', alamat:'Jl. Malioboro No. 88, Yogyakarta', catatan:'Rekan kerja proyek Bali', favorit:false },
+  { id:8, namaDepan:'Hani', namaBelakang:'Rahayu', telepon:'031-8901-5678', hp:'0877-2345-6789', email:'hani.r@email.com', grup:'Keluarga', alamat:'Jl. Diponegoro No. 45, Surabaya', catatan:'Ibunda', favorit:true },
+  { id:9, namaDepan:'Irwan', namaBelakang:'Susanto', telepon:'022-9012-6789', hp:'0812-1234-5678', email:'irwan.sus@bisnis.co.id', grup:'Bisnis', alamat:'Gedung Bisnis Tower Lt.12, Bandung', catatan:'Mitra usaha', favorit:false },
+  { id:10, namaDepan:'Julia', namaBelakang:'Hartono', telepon:'021-1234-7890', hp:'0895-6789-0123', email:'julia.h@studio.com', grup:'Lainnya', alamat:'Studio Kreatif Bld., Jakarta Selatan', catatan:'Desainer freelance', favorit:false },
+];
+
+let contacts = [];
+let selectedId = null;
+let editId = null;
+let currentFilter = 'ALL';
+let currentSearch = '';
+let currentSort = 'nama';
+let showFavOnly = false;
+
+// ─────────────────────────────────────────────────────────
+//  STORAGE
+// ─────────────────────────────────────────────────────────
+function load() {
+  try {
+    const d = localStorage.getItem(STORAGE_KEY);
+    contacts = d ? JSON.parse(d) : JSON.parse(JSON.stringify(SEED_DATA));
+  } catch { contacts = JSON.parse(JSON.stringify(SEED_DATA)); }
+}
+function save() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts)); } catch {}
+}
+function nextId() { return contacts.length ? Math.max(...contacts.map(c => c.id)) + 1 : 1; }
+
+// ─────────────────────────────────────────────────────────
+//  FILTERING & SORTING
+// ─────────────────────────────────────────────────────────
+function getFiltered() {
+  let list = [...contacts];
+  if (showFavOnly) list = list.filter(c => c.favorit);
+  if (currentFilter !== 'ALL' && currentFilter !== '⭐') {
+    list = list.filter(c => c.namaDepan[0].toUpperCase() === currentFilter);
+  }
+  if (currentFilter === '⭐') list = list.filter(c => c.favorit);
+  if (currentSearch) {
+    const q = currentSearch.toLowerCase();
+    list = list.filter(c => fullName(c).toLowerCase().includes(q) || c.telepon.includes(q) || (c.hp||'').includes(q) || (c.email||'').toLowerCase().includes(q));
+  }
+  if (currentSort === 'nama') list.sort((a,b) => fullName(a).localeCompare(fullName(b)));
+  else if (currentSort === 'nama_z') list.sort((a,b) => fullName(b).localeCompare(fullName(a)));
+  else if (currentSort === 'grup') list.sort((a,b) => a.grup.localeCompare(b.grup) || fullName(a).localeCompare(fullName(b)));
+  return list;
+}
+
+function fullName(c) { return (c.namaDepan + ' ' + c.namaBelakang).trim(); }
+function initials(c) { return ((c.namaDepan[0]||'') + (c.namaBelakang?.[0]||'')).toUpperCase(); }
+
+const AVATAR_COLORS = ['#6b3f0e','#8b1a1a','#1a4a6b','#2d6b1a','#5a1a6b','#6b5a1a','#1a6b5a'];
+function avatarColor(name) { let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff; return AVATAR_COLORS[h % AVATAR_COLORS.length]; }
+
+// ─────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────
+function renderAlphaTabs() {
+  const strip = document.getElementById('alpha-strip');
+  // keep first 2 (Semua, ⭐), rebuild alpha
+  while (strip.children.length > 2) strip.removeChild(strip.lastChild);
+  const letters = [...new Set(contacts.map(c => c.namaDepan[0].toUpperCase()))].sort();
+  for (const l of letters) {
+    const btn = document.createElement('button');
+    btn.className = 'alpha-tab' + (currentFilter === l ? ' active' : '');
+    btn.textContent = l;
+    btn.onclick = () => filterAlpha(l);
+    strip.appendChild(btn);
+  }
+  // mark active
+  for (const btn of strip.children) {
+    btn.classList.toggle('active', btn.textContent === (currentFilter === 'ALL' ? 'Semua' : currentFilter === '⭐' ? '⭐' : currentFilter));
+  }
+}
+
+function renderList() {
+  const list = getFiltered();
+  const el = document.getElementById('contact-list');
+  el.innerHTML = '';
+
+  if (list.length === 0) {
+    el.innerHTML = '<div style="padding:2rem;text-align:center;color:#c4a882;font-style:italic">— Tidak ada kontak —</div>';
+    document.getElementById('stat-total').textContent = '0';
+    return;
+  }
+
+  // Group by first letter if sort=nama
+  const grouped = {};
+  for (const c of list) {
+    const key = currentSort === 'grup' ? c.grup : c.namaDepan[0].toUpperCase();
+    (grouped[key] = grouped[key]||[]).push(c);
+  }
+
+  for (const [key, items] of Object.entries(grouped)) {
+    const hdr = document.createElement('div');
+    hdr.className = 'list-group-header';
+    hdr.textContent = key;
+    el.appendChild(hdr);
+    for (const c of items) {
+      const row = document.createElement('div');
+      row.className = 'contact-row' + (c.id === selectedId ? ' selected' : '');
+      row.dataset.id = c.id;
+      row.innerHTML = `
+        <div class="avatar" style="background:${avatarColor(fullName(c))}">${initials(c)}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.favorit?'⭐ ':''}${fullName(c)}</div>
+          <div class="contact-phone">${c.telepon}</div>
+        </div>`;
+      row.onclick = () => selectContact(c.id);
+      el.appendChild(row);
+    }
+  }
+
+  document.getElementById('stat-total').textContent = list.length + (list.length < contacts.length ? ` / ${contacts.length}` : '');
+}
+
+function selectContact(id) {
+  selectedId = id;
+  renderList();
+  showDetail(id);
+}
+
+function showDetail(id) {
+  const c = contacts.find(x => x.id === id);
+  const empty = document.getElementById('detail-empty');
+  const content = document.getElementById('detail-content');
+  if (!c) { empty.style.display=''; content.classList.remove('show'); return; }
+  empty.style.display = 'none';
+  content.classList.add('show');
+  content.innerHTML = `
+    <div class="detail-avatar" style="background:${avatarColor(fullName(c))}">${initials(c)}</div>
+    <div class="detail-name">${c.favorit ? '⭐ ' : ''}${fullName(c)}</div>
+    <div class="detail-group">📁 ${c.grup}</div>
+    <div class="field-grid">
+      ${c.telepon ? `<div class="field-label">📞 Telepon</div><div class="field-val">${c.telepon}</div>` : ''}
+      ${c.hp ? `<div class="field-label">📱 HP / WA</div><div class="field-val">${c.hp}</div>` : ''}
+      ${c.email ? `<div class="field-label">✉ Email</div><div class="field-val"><a href="mailto:${c.email}">${c.email}</a></div>` : ''}
+      ${c.alamat ? `<div class="field-label">🏠 Alamat</div><div class="field-val">${c.alamat}</div>` : ''}
+    </div>
+    <div class="detail-actions">
+      <button class="action-btn" onclick="editSelected()">✏ Ubah</button>
+      <button class="action-btn" onclick="toggleFav(${c.id})">${c.favorit ? '☆ Hapus Favorit' : '⭐ Favorit'}</button>
+      <button class="action-btn" onclick="duplicateSelected()">⧉ Duplikasi</button>
+      <button class="action-btn danger" onclick="deleteSelected()">🗑 Hapus</button>
+    </div>
+    ${c.catatan ? `<div class="notes-section"><h4>Catatan</h4><div class="notes-text">${c.catatan}</div></div>` : ''}
+  `;
+}
+
+function render() {
+  renderAlphaTabs();
+  renderList();
+  showDetail(selectedId);
+}
+
+// ─────────────────────────────────────────────────────────
+//  CRUD
+// ─────────────────────────────────────────────────────────
+function openAdd() {
+  editId = null;
+  document.getElementById('form-modal-title').textContent = '✚ Tambah Kontak Baru';
+  clearForm();
+  openModal('form-modal');
+}
+
+function editSelected() {
+  if (!selectedId) { toast('Pilih kontak dahulu!'); return; }
+  const c = contacts.find(x => x.id === selectedId);
+  if (!c) return;
+  editId = c.id;
+  document.getElementById('form-modal-title').textContent = '✏ Ubah Kontak';
+  document.getElementById('f-nama-depan').value = c.namaDepan;
+  document.getElementById('f-nama-belakang').value = c.namaBelakang || '';
+  document.getElementById('f-telepon').value = c.telepon;
+  document.getElementById('f-hp').value = c.hp || '';
+  document.getElementById('f-email').value = c.email || '';
+  document.getElementById('f-grup').value = c.grup;
+  document.getElementById('f-alamat').value = c.alamat || '';
+  document.getElementById('f-catatan').value = c.catatan || '';
+  document.getElementById('f-fav').checked = c.favorit || false;
+  openModal('form-modal');
+}
+
+function saveContact() {
+  const namaDepan = document.getElementById('f-nama-depan').value.trim();
+  const telepon = document.getElementById('f-telepon').value.trim();
+  if (!namaDepan) { toast('Nama depan wajib diisi!'); return; }
+  if (!telepon) { toast('Nomor telepon wajib diisi!'); return; }
+
+  const data = {
+    namaDepan,
+    namaBelakang: document.getElementById('f-nama-belakang').value.trim(),
+    telepon,
+    hp: document.getElementById('f-hp').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    grup: document.getElementById('f-grup').value,
+    alamat: document.getElementById('f-alamat').value.trim(),
+    catatan: document.getElementById('f-catatan').value.trim(),
+    favorit: document.getElementById('f-fav').checked,
+  };
+
+  if (editId) {
+    const idx = contacts.findIndex(c => c.id === editId);
+    contacts[idx] = { ...contacts[idx], ...data };
+    toast('Kontak berhasil diperbarui');
+  } else {
+    contacts.push({ id: nextId(), ...data });
+    selectedId = contacts[contacts.length-1].id;
+    toast('Kontak baru berhasil ditambahkan');
+  }
+  save(); closeFormModal(); render();
+}
+
+function deleteSelected() {
+  if (!selectedId) { toast('Pilih kontak dahulu!'); return; }
+  const c = contacts.find(x => x.id === selectedId);
+  showConfirm(`Hapus kontak <strong>${fullName(c)}</strong>?<br>Tindakan ini tidak dapat dibatalkan.`, () => {
+    contacts = contacts.filter(x => x.id !== selectedId);
+    selectedId = null;
+    save(); render();
+    toast('Kontak dihapus');
+  });
+}
+
+function duplicateSelected() {
+  if (!selectedId) { toast('Pilih kontak dahulu!'); return; }
+  const c = contacts.find(x => x.id === selectedId);
+  const newC = { ...c, id: nextId(), namaDepan: c.namaDepan + ' (kopi)', favorit: false };
+  contacts.push(newC);
+  selectedId = newC.id;
+  save(); render();
+  toast('Kontak diduplikasi');
+}
+
+function toggleFav(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  c.favorit = !c.favorit;
+  save(); render();
+  toast(c.favorit ? '⭐ Ditandai favorit' : 'Dihapus dari favorit');
+}
+
+function clearForm() {
+  ['f-nama-depan','f-nama-belakang','f-telepon','f-hp','f-email','f-alamat','f-catatan'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f-grup').value = 'Umum';
+  document.getElementById('f-fav').checked = false;
+}
+
+// ─────────────────────────────────────────────────────────
+//  FILTER / SORT
+// ─────────────────────────────────────────────────────────
+function filterAlpha(l) { currentFilter = l; showFavOnly = (l === '⭐'); render(); }
+function filterFav() { showFavOnly = true; currentFilter = '⭐'; render(); }
+function filterAll() { showFavOnly = false; currentFilter = 'ALL'; currentSearch = ''; document.getElementById('search-input').value = ''; render(); }
+function sortBy(key) { currentSort = key; render(); toast('Diurutkan: ' + key); }
+function searchContacts() { currentSearch = document.getElementById('search-input').value; render(); }
+
+// ─────────────────────────────────────────────────────────
+//  EXPORT / IMPORT
+// ─────────────────────────────────────────────────────────
+function exportData() {
+  const blob = new Blob([JSON.stringify(contacts, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'buku_telepon.json';
+  a.click();
+  toast('Data diekspor ke buku_telepon.json');
+}
+function importClick() { document.getElementById('import-file').click(); }
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error();
+      showConfirm(`Impor ${data.length} kontak? Data saat ini akan digabung.`, () => {
+        const maxId = contacts.length ? Math.max(...contacts.map(c=>c.id)) : 0;
+        data.forEach((c, i) => c.id = maxId + i + 1);
+        contacts = [...contacts, ...data];
+        save(); render();
+        toast(`${data.length} kontak berhasil diimpor`);
+      });
+    } catch { toast('Format file tidak valid!'); }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+function printView() {
+  window.print();
+}
+
+// ─────────────────────────────────────────────────────────
+//  TOOLS
+// ─────────────────────────────────────────────────────────
+function statsModal() {
+  const grups = {};
+  contacts.forEach(c => grups[c.grup] = (grups[c.grup]||0) + 1);
+  const favCount = contacts.filter(c => c.favorit).length;
+  const rows = Object.entries(grups).sort((a,b)=>b[1]-a[1]).map(([g,n]) => `<tr><td>${g}</td><td style="text-align:right;font-weight:700">${n}</td></tr>`).join('');
+  openInfo('📊 Statistik', `
+    <table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin-bottom:1rem">
+      <tr style="border-bottom:1px solid #c4a882"><th style="text-align:left;color:#6b3f0e">Grup</th><th style="color:#6b3f0e">Jumlah</th></tr>
+      ${rows}
+      <tr style="border-top:2px solid #b8860b;font-weight:700"><td>Total</td><td style="text-align:right">${contacts.length}</td></tr>
+    </table>
+    <p style="font-size:0.8rem;color:#6b3f0e">Favorit: <strong>${favCount}</strong> kontak</p>
+  `);
+}
+
+function findDuplicates() {
+  const seen = {}; const dupes = [];
+  contacts.forEach(c => { const k = fullName(c).toLowerCase(); (seen[k]=(seen[k]||[])).push(c); });
+  for (const [k, arr] of Object.entries(seen)) if (arr.length > 1) dupes.push(arr);
+  if (!dupes.length) { openInfo('Cari Duplikat', '<p style="color:#2d6b1a">✓ Tidak ada kontak duplikat ditemukan.</p>'); return; }
+  const html = dupes.map(arr => `<div style="margin-bottom:0.5rem;color:#8b1a1a">• ${arr.map(c => `${fullName(c)} (ID:${c.id})`).join(' ↔ ')}</div>`).join('');
+  openInfo('Duplikat Ditemukan', `<p style="margin-bottom:0.7rem;font-size:0.8rem;color:#6b3f0e">Nama yang muncul lebih dari sekali:</p>${html}`);
+}
+
+function clearAllData() {
+  showConfirm('Hapus <strong>semua</strong> data kontak? Tindakan ini tidak bisa dibatalkan!', () => {
+    contacts = []; selectedId = null;
+    save(); render();
+    toast('Semua data dihapus');
+  });
+}
+
+function showHelp() {
+  openInfo('⌨ Pintasan Keyboard', `
+    <table style="width:100%;font-size:0.82rem;border-collapse:collapse">
+      ${[
+        ['Ctrl+N','Tambah kontak baru'],
+        ['Ctrl+U','Ubah kontak dipilih'],
+        ['Del','Hapus kontak dipilih'],
+        ['Ctrl+D','Duplikasi kontak'],
+        ['Ctrl+E','Ekspor JSON'],
+        ['Ctrl+I','Impor JSON'],
+        ['Ctrl+F','Fokus ke pencarian'],
+        ['Esc','Tutup modal'],
+      ].map(([k,v])=>`<tr style="border-bottom:1px dashed #e0d5c0"><td style="padding:0.35rem 0.5rem;font-weight:700;color:#6b3f0e">${k}</td><td style="padding:0.35rem 0.5rem">${v}</td></tr>`).join('')}
+    </table>
+  `);
+}
+
+function showAbout() {
+  openInfo('ℹ Tentang', `
+    <div style="text-align:center;padding:0.5rem 0">
+      <div style="font-family:'Playfair Display',serif;font-size:1.8rem;color:#b8860b;margin-bottom:0.3rem">📖</div>
+      <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.1rem;color:#1a1208">Buku Telepon</div>
+      <div style="font-size:0.75rem;color:#6b3f0e;margin:0.3rem 0">Versi 1.0 · Simulasi Direktori Kontak</div>
+      <p style="font-size:0.82rem;color:#3d2b0d;margin-top:0.8rem;font-style:italic;font-family:'IM Fell English',serif">Dibuat dengan penuh semangat menggunakan HTML, CSS, dan JavaScript murni.</p>
+    </div>
+  `);
+}
+
+// ─────────────────────────────────────────────────────────
+//  MODALS
+// ─────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function closeFormModal() { closeModal('form-modal'); }
+function closeInfoModal() { closeModal('info-modal'); }
+function closeConfirm() { closeModal('confirm-modal'); }
+
+function openInfo(title, html) {
+  document.getElementById('info-modal-title').textContent = title;
+  document.getElementById('info-modal-body').innerHTML = html;
+  openModal('info-modal');
+}
+
+function showConfirm(msg, onOk) {
+  document.getElementById('confirm-msg').innerHTML = msg;
+  const btn = document.getElementById('confirm-ok');
+  btn.onclick = () => { onOk(); closeConfirm(); };
+  openModal('confirm-modal');
+}
+
+// ─────────────────────────────────────────────────────────
+//  MENU DROPDOWNS
+// ─────────────────────────────────────────────────────────
+function toggleMenu(id) {
+  const all = document.querySelectorAll('.dropdown');
+  all.forEach(d => { if (d.id !== id) d.classList.remove('show'); });
+  document.getElementById(id).classList.toggle('show');
+  document.querySelectorAll('.menu-trigger').forEach(b => b.classList.remove('open'));
+  const dd = document.getElementById(id);
+  if (dd.classList.contains('show')) {
+    dd.previousElementSibling.classList.add('open');
+  }
+}
+function closeMenus() {
+  document.querySelectorAll('.dropdown').forEach(d => d.classList.remove('show'));
+  document.querySelectorAll('.menu-trigger').forEach(b => b.classList.remove('open'));
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.menu-item')) closeMenus();
+});
+
+// ─────────────────────────────────────────────────────────
+//  TOAST
+// ─────────────────────────────────────────────────────────
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─────────────────────────────────────────────────────────
+//  KEYBOARD
+// ─────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  const inInput = ['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName);
+  if (e.key === 'Escape') { closeMenus(); closeFormModal(); closeInfoModal(); closeConfirm(); return; }
+  if (inInput) return;
+  if (e.ctrlKey || e.metaKey) {
+    switch(e.key.toLowerCase()) {
+      case 'n': e.preventDefault(); openAdd(); break;
+      case 'u': e.preventDefault(); editSelected(); break;
+      case 'd': e.preventDefault(); duplicateSelected(); break;
+      case 'e': e.preventDefault(); exportData(); break;
+      case 'i': e.preventDefault(); importClick(); break;
+      case 'f': e.preventDefault(); document.getElementById('search-input').focus(); break;
+    }
+  } else if (e.key === 'Delete') {
+    deleteSelected();
+  }
+});
+
+// ─────────────────────────────────────────────────────────
+//  START
+// ─────────────────────────────────────────────────────────
+load();
+render();
+</script>
+</body>
+</html>
