@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Game of Life</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+  :root {
+    --bg: #050a0f;
+    --panel: #0a1520;
+    --border: #0f3a5a;
+    --accent: #00d4ff;
+    --accent2: #00ff88;
+    --dead: #050a0f;
+    --alive: #00d4ff;
+    --glow: 0 0 10px #00d4ff88;
+    --text: #a0d8ef;
+    --dim: #2a5070;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Scanlines effect */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,212,255,0.015) 2px,
+      rgba(0,212,255,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: clamp(1.5rem, 4vw, 2.8rem);
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    text-shadow: 0 0 30px var(--accent), 0 0 60px #00d4ff44;
+    margin: 1.5rem 0 0.3rem;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 0.75rem;
+    letter-spacing: 0.3em;
+    color: var(--dim);
+    margin-bottom: 1.2rem;
+    text-transform: uppercase;
+  }
+
+  .layout {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    padding: 0 1rem 2rem;
+    width: 100%;
+    max-width: 1100px;
+  }
+
+  /* ── MENU PANEL ── */
+  .menu-panel {
+    min-width: 220px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    box-shadow: 0 0 20px #00d4ff18;
+  }
+
+  .menu-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.25em;
+    color: var(--dim);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.8rem;
+    text-transform: uppercase;
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.82rem;
+    padding: 0.55rem 0.75rem;
+    margin-bottom: 0.45rem;
+    cursor: pointer;
+    border-radius: 3px;
+    text-align: left;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .menu-btn:hover {
+    background: #00d4ff14;
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .menu-btn.danger:hover {
+    background: #ff003314;
+    border-color: #ff0033;
+    color: #ff0033;
+    box-shadow: 0 0 10px #ff003388;
+  }
+
+  .menu-btn.active {
+    background: #00d4ff22;
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+  }
+
+  .key-badge {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent2);
+    min-width: 1.4rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0.7rem 0;
+  }
+
+  .menu-section {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin: 0.6rem 0 0.4rem;
+  }
+
+  /* Speed slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.75rem;
+    color: var(--text);
+  }
+  .slider-row label { min-width: 4rem; font-size: 0.7rem; color: var(--dim); }
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 3px;
+  }
+  .slider-val { min-width: 2rem; text-align: right; color: var(--accent); font-size: 0.75rem; }
+
+  /* Stats */
+  .stats {
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.8rem;
+    font-size: 0.72rem;
+    line-height: 2;
+  }
+  .stat-row { display: flex; justify-content: space-between; }
+  .stat-label { color: var(--dim); }
+  .stat-val { color: var(--accent2); font-family: 'Orbitron', monospace; font-size: 0.68rem; }
+
+  /* ── CANVAS ── */
+  .canvas-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #gol-canvas {
+    border: 1px solid var(--border);
+    box-shadow: 0 0 30px #00d4ff22, inset 0 0 40px #00000088;
+    cursor: crosshair;
+    display: block;
+    image-rendering: pixelated;
+    max-width: 100%;
+  }
+
+  .status-bar {
+    margin-top: 0.6rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--dim);
+    text-align: center;
+  }
+
+  .status-bar span { color: var(--accent); }
+
+  /* pattern modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #00000099;
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 1.5rem;
+    min-width: 320px;
+    box-shadow: 0 0 40px #00d4ff33;
+  }
+  .modal h2 {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    color: var(--accent);
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+  }
+  .pattern-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+  .pattern-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.8rem;
+    padding: 0.6rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .pattern-btn:hover {
+    border-color: var(--accent2);
+    color: var(--accent2);
+    background: #00ff8814;
+  }
+  .modal-close {
+    margin-top: 1rem;
+    width: 100%;
+    background: none;
+    border: 1px solid var(--dim);
+    color: var(--dim);
+    font-family: 'Share Tech Mono', monospace;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { border-color: #ff0033; color: #ff0033; }
+</style>
+</head>
+<body>
+
+<h1>GAME OF LIFE</h1>
+<p class="subtitle">Conway's Cellular Automaton — v2.0</p>
+
+<div class="layout">
+  <!-- MENU -->
+  <div class="menu-panel">
+    <div class="menu-title">⬡ Kontrol</div>
+
+    <div class="menu-section">Simulasi</div>
+    <button class="menu-btn" id="btn-play" onclick="togglePlay()">
+      <span class="key-badge">1</span> Mulai / Berhenti
+    </button>
+    <button class="menu-btn" onclick="step()">
+      <span class="key-badge">2</span> Langkah (+1)
+    </button>
+
+    <hr class="divider">
+    <div class="menu-section">Pola Awal</div>
+    <button class="menu-btn" onclick="randomize()">
+      <span class="key-badge">3</span> Acak
+    </button>
+    <button class="menu-btn" onclick="openPatternModal()">
+      <span class="key-badge">4</span> Pola Preset
+    </button>
+    <button class="menu-btn danger" onclick="clearGrid()">
+      <span class="key-badge">5</span> Bersihkan
+    </button>
+
+    <hr class="divider">
+    <div class="menu-section">Tampilan</div>
+    <button class="menu-btn" onclick="changeColor()">
+      <span class="key-badge">6</span> Ganti Warna
+    </button>
+    <button class="menu-btn" onclick="toggleGrid()">
+      <span class="key-badge">7</span> Toggle Grid
+    </button>
+
+    <hr class="divider">
+    <div class="menu-section">Kecepatan</div>
+    <div class="slider-row">
+      <label>Delay</label>
+      <input type="range" id="speed-slider" min="30" max="800" value="120" step="10" oninput="updateSpeed(this.value)">
+      <span class="slider-val" id="speed-val">120ms</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat-row"><span class="stat-label">Generasi</span><span class="stat-val" id="stat-gen">0</span></div>
+      <div class="stat-row"><span class="stat-label">Sel Hidup</span><span class="stat-val" id="stat-alive">0</span></div>
+      <div class="stat-row"><span class="stat-label">Status</span><span class="stat-val" id="stat-status">DIAM</span></div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-wrap">
+    <canvas id="gol-canvas"></canvas>
+    <div class="status-bar">
+      Klik/seret canvas untuk menggambar · Tekan <span>1–7</span> untuk shortcut
+    </div>
+  </div>
+</div>
+
+<!-- PATTERN MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>⬡ PILIH POLA</h2>
+    <div class="pattern-grid" id="pattern-grid"></div>
+    <button class="modal-close" onclick="closePatternModal()">[ TUTUP ]</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+const CELL = 11;
+let cols, rows, grid, nextGrid;
+let running = false;
+let timer = null;
+let delay = 120;
+let generation = 0;
+let showGridLines = true;
+let isDrawing = false;
+let drawMode = 1; // 1=on, 0=off
+
+// Colors
+const COLORS = [
+  { alive: '#00d4ff', glow: '#00d4ff66' },
+  { alive: '#00ff88', glow: '#00ff8866' },
+  { alive: '#ff6b35', glow: '#ff6b3566' },
+  { alive: '#ff0099', glow: '#ff009966' },
+  { alive: '#ffd700', glow: '#ffd70066' },
+  { alive: '#bf5fff', glow: '#bf5fff66' },
+];
+let colorIdx = 0;
+
+const canvas = document.getElementById('gol-canvas');
+const ctx = canvas.getContext('2d');
+
+// ── INIT ──
+function init() {
+  // size canvas to fit
+  const maxW = Math.min(window.innerWidth - 280, 800);
+  const maxH = Math.min(window.innerHeight - 200, 700);
+  cols = Math.floor(maxW / CELL);
+  rows = Math.floor(maxH / CELL);
+  canvas.width = cols * CELL;
+  canvas.height = rows * CELL;
+  grid = new Uint8Array(cols * rows);
+  nextGrid = new Uint8Array(cols * rows);
+  randomize();
+}
+
+function idx(x, y) { return y * cols + x; }
+
+// ── GRID OPS ──
+function randomize() {
+  for (let i = 0; i < grid.length; i++)
+    grid[i] = Math.random() < 0.3 ? 1 : 0;
+  generation = 0;
+  render();
+  updateStats();
+}
+
+function clearGrid() {
+  grid.fill(0);
+  generation = 0;
+  render();
+  updateStats();
+}
+
+function step() {
+  computeNext();
+  generation++;
+  render();
+  updateStats();
+}
+
+function computeNext() {
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      let n = 0;
+      for (let dy = -1; dy <= 1; dy++)
+        for (let dx = -1; dx <= 1; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = (x + dx + cols) % cols;
+          const ny = (y + dy + rows) % rows;
+          n += grid[idx(nx, ny)];
+        }
+      const alive = grid[idx(x, y)];
+      nextGrid[idx(x, y)] = alive
+        ? (n === 2 || n === 3 ? 1 : 0)
+        : (n === 3 ? 1 : 0);
+    }
+  }
+  const tmp = grid; grid = nextGrid; nextGrid = tmp;
+}
+
+// ── RENDER ──
+function render() {
+  const color = COLORS[colorIdx];
+  ctx.fillStyle = '#050a0f';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // cells
+  ctx.shadowBlur = 6;
+  ctx.shadowColor = color.glow;
+  ctx.fillStyle = color.alive;
+  for (let y = 0; y < rows; y++)
+    for (let x = 0; x < cols; x++)
+      if (grid[idx(x, y)])
+        ctx.fillRect(x * CELL + 1, y * CELL + 1, CELL - 1, CELL - 1);
+
+  ctx.shadowBlur = 0;
+
+  if (showGridLines) {
+    ctx.strokeStyle = '#0a1e2e';
+    ctx.lineWidth = 0.5;
+    for (let x = 0; x <= cols; x++) {
+      ctx.beginPath(); ctx.moveTo(x * CELL, 0); ctx.lineTo(x * CELL, canvas.height); ctx.stroke();
+    }
+    for (let y = 0; y <= rows; y++) {
+      ctx.beginPath(); ctx.moveTo(0, y * CELL); ctx.lineTo(canvas.width, y * CELL); ctx.stroke();
+    }
+  }
+}
+
+// ── LOOP ──
+function togglePlay() {
+  running = !running;
+  const btn = document.getElementById('btn-play');
+  const st = document.getElementById('stat-status');
+  if (running) {
+    btn.classList.add('active');
+    st.textContent = 'BERJALAN';
+    loop();
+  } else {
+    btn.classList.remove('active');
+    st.textContent = 'DIAM';
+    clearTimeout(timer);
+  }
+}
+
+function loop() {
+  if (!running) return;
+  step();
+  timer = setTimeout(loop, delay);
+}
+
+function updateSpeed(v) {
+  delay = +v;
+  document.getElementById('speed-val').textContent = v + 'ms';
+}
+
+function updateStats() {
+  document.getElementById('stat-gen').textContent = generation;
+  let alive = 0;
+  for (let i = 0; i < grid.length; i++) alive += grid[i];
+  document.getElementById('stat-alive').textContent = alive;
+}
+
+function changeColor() {
+  colorIdx = (colorIdx + 1) % COLORS.length;
+  render();
+}
+
+function toggleGrid() {
+  showGridLines = !showGridLines;
+  render();
+}
+
+// ── DRAW ──
+canvas.addEventListener('mousedown', e => {
+  isDrawing = true;
+  const { x, y } = cellAt(e);
+  drawMode = grid[idx(x, y)] ? 0 : 1;
+  setCell(x, y, drawMode);
+  render(); updateStats();
+});
+canvas.addEventListener('mousemove', e => {
+  if (!isDrawing) return;
+  const { x, y } = cellAt(e);
+  setCell(x, y, drawMode);
+  render(); updateStats();
+});
+window.addEventListener('mouseup', () => isDrawing = false);
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  isDrawing = true;
+  const { x, y } = cellAt(e.touches[0]);
+  drawMode = grid[idx(x, y)] ? 0 : 1;
+  setCell(x, y, drawMode);
+  render(); updateStats();
+}, { passive: false });
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  const { x, y } = cellAt(e.touches[0]);
+  setCell(x, y, drawMode);
+  render(); updateStats();
+}, { passive: false });
+window.addEventListener('touchend', () => isDrawing = false);
+
+function cellAt(e) {
+  const r = canvas.getBoundingClientRect();
+  const x = Math.floor((e.clientX - r.left) / CELL);
+  const y = Math.floor((e.clientY - r.top) / CELL);
+  return { x: Math.max(0, Math.min(cols - 1, x)), y: Math.max(0, Math.min(rows - 1, y)) };
+}
+function setCell(x, y, v) { grid[idx(x, y)] = v; }
+
+// ── KEYBOARD ──
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  switch (e.key) {
+    case '1': togglePlay(); break;
+    case '2': step(); break;
+    case '3': randomize(); break;
+    case '4': openPatternModal(); break;
+    case '5': clearGrid(); break;
+    case '6': changeColor(); break;
+    case '7': toggleGrid(); break;
+  }
+});
+
+// ── PATTERNS ──
+const PATTERNS = {
+  'Glider': [[0,1],[1,2],[2,0],[2,1],[2,2]],
+  'Blinker': [[0,1],[1,1],[2,1]],
+  'R-pentomino': [[1,0],[2,0],[0,1],[1,1],[1,2]],
+  'Beacon': [[0,0],[1,0],[0,1],[3,2],[2,3],[3,3]],
+  'Toad': [[1,0],[2,0],[3,0],[0,1],[1,1],[2,1]],
+  'Glider Gun (Gosper)': [
+    [24,0],[22,1],[24,1],[12,2],[13,2],[20,2],[21,2],[34,2],[35,2],
+    [11,3],[15,3],[20,3],[21,3],[34,3],[35,3],[0,4],[1,4],[10,4],
+    [16,4],[20,4],[21,4],[0,5],[1,5],[10,5],[14,5],[16,5],[17,5],
+    [22,5],[24,5],[10,6],[16,6],[24,6],[11,7],[15,7],[12,8],[13,8]
+  ],
+  'Pulsar': (() => {
+    const cells = [];
+    const cols2 = [2,3,4,8,9,10];
+    const rows2 = [0,5,7,12];
+    for (const r of rows2) for (const c of cols2) { cells.push([c, r]); cells.push([r, c]); }
+    return [...new Set(cells.map(c => c.join(',')))].map(s => s.split(',').map(Number));
+  })(),
+  'Block': [[0,0],[1,0],[0,1],[1,1]],
+  'Pentadecathlon': [[0,0],[1,0],[2,0],[0,1],[2,1],[0,2],[1,2],[2,2],[0,3],[1,3],[2,3],[0,4],[1,4],[2,4],[0,5],[2,5],[0,6],[1,6],[2,6],[0,7],[1,7],[2,7],[0,8],[1,8],[2,8],[0,9],[1,9],[2,9]],
+};
+
+function openPatternModal() {
+  const pg = document.getElementById('pattern-grid');
+  pg.innerHTML = '';
+  for (const name in PATTERNS) {
+    const btn = document.createElement('button');
+    btn.className = 'pattern-btn';
+    btn.textContent = name;
+    btn.onclick = () => { placePattern(name); closePatternModal(); };
+    pg.appendChild(btn);
+  }
+  document.getElementById('modal').classList.add('show');
+}
+function closePatternModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function placePattern(name) {
+  const cells = PATTERNS[name];
+  clearGrid();
+  const minX = Math.min(...cells.map(c => c[0]));
+  const minY = Math.min(...cells.map(c => c[1]));
+  const maxX = Math.max(...cells.map(c => c[0]));
+  const maxY = Math.max(...cells.map(c => c[1]));
+  const offX = Math.floor((cols - (maxX - minX)) / 2) - minX;
+  const offY = Math.floor((rows - (maxY - minY)) / 2) - minY;
+  for (const [x, y] of cells) {
+    const nx = x + offX, ny = y + offY;
+    if (nx >= 0 && nx < cols && ny >= 0 && ny < rows)
+      grid[idx(nx, ny)] = 1;
+  }
+  render(); updateStats();
+}
+
+// close modal on overlay click
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closePatternModal();
+});
+
+init();
+</script>
+</body>
+</html>
