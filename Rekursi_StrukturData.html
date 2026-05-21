@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bab 10 – Rekursi (Recursion)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+  :root {
+    --bg:        #fdf6f0;
+    --surface:   #ffffff;
+    --pink:      #f4c6d0;
+    --pink-d:    #e89fad;
+    --lavender:  #d8d0f0;
+    --lavender-d:#b8aee0;
+    --mint:      #c8ead8;
+    --mint-d:    #9fd4b8;
+    --peach:     #fce0c8;
+    --peach-d:   #f8c8a0;
+    --sky:       #c8e4f4;
+    --sky-d:     #98ccec;
+    --yellow:    #faf0c0;
+    --yellow-d:  #f0d878;
+    --text:      #3a3040;
+    --text-soft: #6a5e78;
+    --border:    #e8dde8;
+    --shadow:    0 4px 24px rgba(100,80,120,0.10);
+    --shadow-lg: 0 8px 40px rgba(100,80,120,0.14);
+    --radius:    18px;
+    --radius-sm: 10px;
+    font-size: 16px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #f9e4ee 0%, #ede4f8 50%, #daeef8 100%);
+    padding: 60px 40px 50px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(244,198,208,.4) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 30%, rgba(216,208,240,.4) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .chapter-label {
+    font-family: 'Times New Roman', serif;
+    font-size: 0.85rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 12px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: clamp(2.4rem, 5vw, 3.8rem);
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1.15;
+    position: relative;
+  }
+  header h1 span {
+    color: var(--text);
+  }
+  .header-sub {
+    margin-top: 14px;
+    font-size: 1.05rem;
+    color: var(--text-soft);
+    font-style: italic;
+  }
+  .pill-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center;
+    margin-top: 28px;
+    position: relative;
+  }
+  .pill {
+    padding: 6px 18px;
+    border-radius: 50px;
+    font-size: 0.82rem;
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    letter-spacing: 0.04em;
+    border: 1.5px solid transparent;
+  }
+  .pill-pink    { background: var(--pink);     border-color: var(--pink-d);     color: #8a3050; }
+  .pill-lav     { background: var(--lavender); border-color: var(--lavender-d); color: #4a3888; }
+  .pill-mint    { background: var(--mint);     border-color: var(--mint-d);     color: #2a6848; }
+  .pill-peach   { background: var(--peach);    border-color: var(--peach-d);    color: #904820; }
+  .pill-sky     { background: var(--sky);      border-color: var(--sky-d);      color: #1a5880; }
+  .pill-yellow  { background: var(--yellow);   border-color: var(--yellow-d);   color: #705820; }
+
+  /* ── NAV TABS ── */
+  .tabs-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(253,246,240,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding: 10px 24px;
+    justify-content: center;
+  }
+  .tab-btn {
+    padding: 7px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    background: var(--surface);
+    font-family: 'Times New Roman', serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    color: var(--text-soft);
+    transition: all .2s;
+    font-weight: bold;
+  }
+  .tab-btn:hover  { background: var(--pink); border-color: var(--pink-d); color: #8a3050; }
+  .tab-btn.active { background: var(--pink); border-color: var(--pink-d); color: #8a3050; }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── SECTIONS ── */
+  .section { display: none; animation: fadeUp .35s ease; }
+  .section.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 32px 36px;
+    margin-bottom: 28px;
+  }
+  .card h2 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .card h3 {
+    font-family: 'Times New Roman', serif;
+    font-size: 1.12rem;
+    font-weight: bold;
+    color: var(--text);
+    margin: 20px 0 8px;
+  }
+  .card p { margin-bottom: 12px; font-size: 1rem; }
+
+  /* ── COLOR HEADER BANDS ── */
+  .band-pink    { border-top: 5px solid var(--pink-d); }
+  .band-lav     { border-top: 5px solid var(--lavender-d); }
+  .band-mint    { border-top: 5px solid var(--mint-d); }
+  .band-peach   { border-top: 5px solid var(--peach-d); }
+  .band-sky     { border-top: 5px solid var(--sky-d); }
+  .band-yellow  { border-top: 5px solid var(--yellow-d); }
+
+  /* ── CODE BLOCKS ── */
+  pre {
+    background: #f8f4fc;
+    border: 1.5px solid #ddd4e8;
+    border-radius: var(--radius-sm);
+    padding: 20px 24px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.7;
+    overflow-x: auto;
+    margin: 14px 0;
+    color: #2a1840;
+  }
+  .kw  { color: #9030a0; font-weight: bold; }
+  .fn  { color: #206090; font-weight: bold; }
+  .cm  { color: #808080; font-style: italic; }
+  .nm  { color: #c05010; }
+
+  /* ── HIGHLIGHT BOXES ── */
+  .box {
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    margin: 14px 0;
+    border-left: 4px solid transparent;
+    font-size: 0.97rem;
+  }
+  .box-pink    { background: #fef0f4; border-color: var(--pink-d); }
+  .box-lav     { background: #f4f0fc; border-color: var(--lavender-d); }
+  .box-mint    { background: #f0faf4; border-color: var(--mint-d); }
+  .box-peach   { background: #fff6ee; border-color: var(--peach-d); }
+  .box-sky     { background: #f0f8fe; border-color: var(--sky-d); }
+  .box-yellow  { background: #fffde8; border-color: var(--yellow-d); }
+
+  /* ── TAGS / LABELS ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 12px;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: bold;
+    font-family: 'Times New Roman', serif;
+    margin-right: 6px;
+    margin-bottom: 4px;
+  }
+
+  /* ── PROPERTIES GRID ── */
+  .prop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin: 18px 0;
+  }
+  .prop-card {
+    border-radius: var(--radius-sm);
+    padding: 20px 18px;
+    text-align: center;
+    border: 1.5px solid transparent;
+  }
+  .prop-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .prop-title {
+    font-weight: bold;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
+  }
+  .prop-desc { font-size: 0.88rem; }
+
+  /* ── TREE SVG ── */
+  .tree-wrap {
+    overflow-x: auto;
+    background: #fdf8ff;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .tree-wrap svg { display: block; margin: 0 auto; }
+
+  /* ── FACTORIAL TABLE ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+    margin: 14px 0;
+  }
+  th {
+    background: var(--pink);
+    padding: 10px 14px;
+    text-align: left;
+    font-family: 'Times New Roman', serif;
+    font-weight: bold;
+    border: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+  }
+  tr:nth-child(even) td { background: #fdf4f8; }
+
+  /* ── STACK DEMO ── */
+  .stack-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin: 16px 0;
+  }
+  .stack-frame {
+    width: 280px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    text-align: center;
+    position: relative;
+  }
+  .stack-arrow {
+    font-size: 1.2rem;
+    color: var(--text-soft);
+  }
+
+  /* ── INTERACTIVE FACTORIAL ── */
+  .interactive-area {
+    background: #f8f4fc;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--lavender-d);
+    padding: 22px 24px;
+    margin: 18px 0;
+  }
+  .interactive-area h3 {
+    margin-top: 0;
+    color: #4a3888;
+  }
+  .input-row {
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .input-row label {
+    font-weight: bold;
+    font-size: 0.95rem;
+  }
+  .input-row input[type=range] {
+    width: 160px;
+    accent-color: var(--lavender-d);
+  }
+  .input-row .val-badge {
+    background: var(--lavender);
+    color: #4a3888;
+    border-radius: 50px;
+    padding: 2px 14px;
+    font-weight: bold;
+    font-size: 1rem;
+    border: 1.5px solid var(--lavender-d);
+  }
+  .result-box {
+    background: white;
+    border-radius: 8px;
+    padding: 12px 18px;
+    border: 1.5px solid var(--border);
+    font-size: 0.95rem;
+  }
+  .result-box strong { color: #9030a0; }
+
+  /* ── HANOI DEMO ── */
+  #hanoi-canvas {
+    display: block;
+    margin: 10px auto;
+    background: #fdf8ff;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+  }
+  .hanoi-controls {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-bottom: 14px;
+  }
+  .btn {
+    padding: 8px 22px;
+    border-radius: 50px;
+    border: 1.5px solid transparent;
+    font-family: 'Times New Roman', serif;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all .18s;
+  }
+  .btn-pink  { background: var(--pink); border-color: var(--pink-d); color: #8a3050; }
+  .btn-pink:hover { background: var(--pink-d); color: white; }
+  .btn-lav   { background: var(--lavender); border-color: var(--lavender-d); color: #4a3888; }
+  .btn-lav:hover { background: var(--lavender-d); color: white; }
+  .btn-mint  { background: var(--mint); border-color: var(--mint-d); color: #2a6848; }
+  .btn-mint:hover { background: var(--mint-d); color: white; }
+  #hanoi-moves-list {
+    max-height: 180px;
+    overflow-y: auto;
+    background: white;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    padding: 10px 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  #hanoi-move-count {
+    font-weight: bold;
+    color: #9030a0;
+    font-size: 0.93rem;
+  }
+
+  /* ── QUEENS DEMO ── */
+  #queens-canvas {
+    display: block;
+    margin: 10px auto;
+    background: white;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+  }
+  .queens-info {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin: 10px 0;
+    font-size: 0.9rem;
+  }
+  .queens-stat {
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-weight: bold;
+  }
+
+  /* ── BINARY SEARCH DEMO ── */
+  .bs-array {
+    display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0;
+  }
+  .bs-cell {
+    width: 44px; height: 44px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 0.82rem;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    transition: all .3s;
+    background: var(--surface);
+  }
+  .bs-cell .idx { font-size: 0.65rem; color: var(--text-soft); font-weight: normal; }
+  .bs-cell.mid   { background: var(--lavender); border-color: var(--lavender-d); }
+  .bs-cell.found { background: var(--mint);     border-color: var(--mint-d); }
+  .bs-cell.out   { background: #f0f0f0; color: #aaa; border-color: #ddd; }
+  .bs-cell.range { background: var(--peach); border-color: var(--peach-d); }
+
+  /* ── FIB VIZ ── */
+  .fib-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .fib-chip {
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.88rem;
+    font-weight: bold;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    transition: all .2s;
+  }
+  .fib-chip.highlight { background: var(--mint); border-color: var(--mint-d); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1.5px solid var(--border);
+    margin: 24px 0;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    header { padding: 40px 20px 36px; }
+    .card  { padding: 22px 18px; }
+    .tabs-bar { gap: 6px; }
+    .tab-btn { font-size: 0.75rem; padding: 6px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="chapter-label">Chapter 10 &nbsp;·&nbsp; Data Structures &amp; Algorithms</div>
+  <h1>Rekursi<br><small style="font-size:.55em;font-weight:400;color:var(--text-soft)">Recursion</small></h1>
+  <p class="header-sub">Memecah masalah besar menjadi sub-masalah yang lebih kecil dari dirinya sendiri</p>
+  <div class="pill-row">
+    <span class="pill pill-pink">10.1 Recursive Functions</span>
+    <span class="pill pill-lav">10.2 Properties</span>
+    <span class="pill pill-mint">10.3 How It Works</span>
+    <span class="pill pill-peach">10.4 Applications</span>
+    <span class="pill pill-sky">10.5 Eight-Queens</span>
+  </div>
+</header>
+
+<!-- NAV TABS -->
+<nav class="tabs-bar">
+  <button class="tab-btn active" onclick="showSection('intro')">Pengantar</button>
+  <button class="tab-btn" onclick="showSection('props')">Properties</button>
+  <button class="tab-btn" onclick="showSection('factorial')">Faktorial</button>
+  <button class="tab-btn" onclick="showSection('fibonacci')">Fibonacci</button>
+  <button class="tab-btn" onclick="showSection('how')">Cara Kerja</button>
+  <button class="tab-btn" onclick="showSection('hanoi')">Hanoi</button>
+  <button class="tab-btn" onclick="showSection('binsearch')">Binary Search</button>
+  <button class="tab-btn" onclick="showSection('queens')">N-Queens</button>
+</nav>
+
+<main>
+
+<!-- ══════════════════════════════════════════════
+     SECTION 1 : INTRO
+══════════════════════════════════════════════ -->
+<div id="sec-intro" class="section active">
+
+  <div class="card band-pink">
+    <h2>Apa Itu Rekursi?</h2>
+    <p><strong>Rekursi</strong> adalah proses penyelesaian masalah dengan cara memecah masalah besar menjadi kasus-kasus yang lebih kecil dari masalah itu sendiri, kemudian menyelesaikan bagian-bagian yang lebih sederhana tersebut.</p>
+    <div class="box box-pink">
+      <em>A <strong>recursive function</strong> is a function that calls itself. The result is a virtual loop similar to a while loop.</em>
+    </div>
+    <h3>Contoh Dasar – printRev(n)</h3>
+    <pre><span class="kw">def</span> <span class="fn">printRev</span>( n ):
+    <span class="kw">if</span> n &gt; <span class="nm">0</span> :
+        <span class="fn">print</span>( n )
+        <span class="fn">printRev</span>( n<span class="nm">-1</span> )   <span class="cm"># recursive call</span></pre>
+    <p>Pemanggilan <code>printRev(4)</code> akan mencetak: <strong>4, 3, 2, 1</strong></p>
+    <h3>Variasi – printInc(n) <em>(urutan naik)</em></h3>
+    <pre><span class="kw">def</span> <span class="fn">printInc</span>( n ):
+    <span class="kw">if</span> n &gt; <span class="nm">0</span> :
+        <span class="fn">printInc</span>( n<span class="nm">-1</span> )   <span class="cm"># recursive call DULU</span>
+        <span class="fn">print</span>( n )        <span class="cm"># baru print</span></pre>
+    <p>Hasil <code>printInc(4)</code>: <strong>1, 2, 3, 4</strong> — karena print terjadi saat <em>unwinding</em>.</p>
+    <div class="box box-lav">
+      <strong>Kunci perbedaan:</strong> Posisi recursive call menentukan apakah aksi dilakukan <em>sebelum</em> atau <em>sesudah</em> rekursi berjalan.
+    </div>
+  </div>
+
+  <div class="card band-lav">
+    <h2>Recursive Call Tree</h2>
+    <p>Call tree menggambarkan alur eksekusi fungsi rekursif. Setiap kotak mewakili satu pemanggilan fungsi.</p>
+    <p><strong>Aturan membaca:</strong></p>
+    <ul style="margin: 8px 0 12px 22px; line-height:2">
+      <li><strong>Solid edge</strong> → pemanggilan fungsi</li>
+      <li><strong>Dashed edge</strong> → return nilai</li>
+      <li>Edge dari kiri ke kanan mengikuti urutan pemanggilan</li>
+    </ul>
+    <div class="tree-wrap">
+      <svg width="520" height="200" viewBox="0 0 520 200">
+        <!-- printRev(4) tree -->
+        <defs>
+          <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#b8aee0"/>
+          </marker>
+        </defs>
+        <!-- boxes -->
+        <rect x="180" y="10" width="120" height="36" rx="8" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="33" text-anchor="middle" font-family="Courier New" font-size="13" fill="#3a3040">printRev(4)</text>
+
+        <rect x="180" y="68" width="120" height="36" rx="8" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="91" text-anchor="middle" font-family="Courier New" font-size="13" fill="#3a3040">printRev(3)</text>
+
+        <rect x="180" y="126" width="120" height="36" rx="8" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="149" text-anchor="middle" font-family="Courier New" font-size="13" fill="#3a3040">printRev(2)</text>
+
+        <rect x="180" y="184" width="120" height="36" rx="8" fill="#fce0c8" stroke="#f0d878" stroke-width="1.5"/>
+        <text x="240" y="207" text-anchor="middle" font-family="Courier New" font-size="13" fill="#3a3040">printRev(0) ← base</text>
+
+        <!-- arrows down -->
+        <line x1="240" y1="46" x2="240" y2="65" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="240" y1="104" x2="240" y2="123" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr)"/>
+        <line x1="240" y1="162" x2="240" y2="181" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr)"/>
+
+        <!-- print labels -->
+        <text x="320" y="32" font-family="Times New Roman" font-size="12" fill="#c05010">print(4)</text>
+        <text x="320" y="90" font-family="Times New Roman" font-size="12" fill="#c05010">print(3)</text>
+        <text x="320" y="148" font-family="Times New Roman" font-size="12" fill="#c05010">print(2)</text>
+        <text x="320" y="207" font-family="Times New Roman" font-size="12" fill="#909090">return</text>
+
+        <!-- label -->
+        <text x="20" y="30" font-family="Times New Roman" font-size="13" font-weight="bold" fill="#3a3040">printRev(4)</text>
+        <text x="20" y="46" font-family="Times New Roman" font-size="11" fill="#6a5e78">call stack ↓</text>
+      </svg>
+    </div>
+    <div class="box box-mint">
+      <strong>Local Variables:</strong> Setiap pemanggilan rekursif membuat <em>instance baru</em> dari semua variabel lokal. Mengubah variabel lokal di satu instance tidak mempengaruhi instance lainnya.
+    </div>
+  </div>
+
+</div><!-- end sec-intro -->
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 2 : PROPERTIES
+══════════════════════════════════════════════ -->
+<div id="sec-props" class="section">
+  <div class="card band-lav">
+    <h2>3 Syarat Wajib Rekursi</h2>
+    <p>Semua solusi rekursif harus memenuhi tiga aturan berikut:</p>
+    <div class="prop-grid">
+      <div class="prop-card" style="background:#f4f0fc;border-color:#b8aee0">
+        <div class="prop-num" style="color:#6040c0">01</div>
+        <div class="prop-title">Base Case</div>
+        <div class="prop-desc">Kasus dasar / titik berhenti. Mewakili subdivisi terkecil dari masalah. Mengakhiri perulangan virtual rekursif.</div>
+      </div>
+      <div class="prop-card" style="background:#fef0f4;border-color:#e89fad">
+        <div class="prop-num" style="color:#c05080">02</div>
+        <div class="prop-title">Recursive Case</div>
+        <div class="prop-desc">Kasus rekursif. Fungsi memanggil dirinya sendiri untuk memecah masalah menjadi bagian yang lebih kecil.</div>
+      </div>
+      <div class="prop-card" style="background:#f0faf4;border-color:#9fd4b8">
+        <div class="prop-num" style="color:#287850">03</div>
+        <div class="prop-title">Progress Toward Base Case</div>
+        <div class="prop-desc">Setiap langkah rekursi harus semakin mendekati base case, agar tidak terjadi infinite loop.</div>
+      </div>
+    </div>
+    <div class="box box-yellow">
+      Jika rekursi tidak membuat kemajuan menuju base case → <strong>infinite virtual loop</strong> → program crash!
+    </div>
+    <h3>Contoh pada printRev(n)</h3>
+    <table>
+      <tr><th>Syarat</th><th>Kode</th><th>Keterangan</th></tr>
+      <tr><td><strong>Base Case</strong></td><td><code>n = 0</code></td><td>Fungsi langsung return, tidak ada aksi tambahan</td></tr>
+      <tr><td><strong>Recursive Case</strong></td><td><code>n &gt; 0</code></td><td>Memanggil printRev(n-1)</td></tr>
+      <tr><td><strong>Progress</strong></td><td><code>n-1</code></td><td>n berkurang 1 setiap rekursi → mendekati 0</td></tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 3 : FACTORIAL
+══════════════════════════════════════════════ -->
+<div id="sec-factorial" class="section">
+  <div class="card band-pink">
+    <h2>10.2.1 Faktorial (n!)</h2>
+    <p>Faktorial dari bilangan bulat positif <em>n</em> digunakan untuk menghitung jumlah permutasi dari <em>n</em> elemen.</p>
+    <div class="box box-pink">
+      <strong>Definisi:</strong> &nbsp; n! = n × (n−1) × (n−2) × … × 1 &nbsp;&nbsp; dan &nbsp;&nbsp; 0! = 1
+    </div>
+    <h3>Definisi Rekursif</h3>
+    <div style="text-align:center; font-size:1.05rem; margin: 14px 0; padding: 14px; background:#fff0f4; border-radius:10px; border:1.5px solid #e89fad;">
+      n! = <strong>1</strong>, jika n = 0 &nbsp;&nbsp;|&nbsp;&nbsp; n! = <strong>n × (n−1)!</strong>, jika n &gt; 0
+    </div>
+    <pre><span class="cm"># Hitung n!</span>
+<span class="kw">def</span> <span class="fn">fact</span>( n ):
+    <span class="kw">assert</span> n &gt;= <span class="nm">0</span>, <span class="cm">"Factorial not defined for negative values."</span>
+    <span class="kw">if</span> n &lt; <span class="nm">2</span> :
+        <span class="kw">return</span> <span class="nm">1</span>           <span class="cm"># base case</span>
+    <span class="kw">else</span> :
+        <span class="kw">return</span> n * <span class="fn">fact</span>(n - <span class="nm">1</span>)  <span class="cm"># recursive case</span></pre>
+
+    <h3>Tabel Faktorial</h3>
+    <table>
+      <tr><th>n</th><th>Ekspresi</th><th>Hasil</th></tr>
+      <tr><td>0</td><td>0!</td><td>1</td></tr>
+      <tr><td>1</td><td>1 × 0!</td><td>1</td></tr>
+      <tr><td>2</td><td>2 × 1!</td><td>2</td></tr>
+      <tr><td>3</td><td>3 × 2!</td><td>6</td></tr>
+      <tr><td>4</td><td>4 × 3!</td><td>24</td></tr>
+      <tr><td>5</td><td>5 × 4!</td><td>120</td></tr>
+      <tr><td>6</td><td>6 × 5!</td><td>720</td></tr>
+    </table>
+  </div>
+
+  <div class="card band-lav">
+    <h2>Kalkulator Faktorial Interaktif</h2>
+    <div class="interactive-area">
+      <h3>Coba Hitung n!</h3>
+      <div class="input-row">
+        <label for="fact-slider">n =</label>
+        <input type="range" id="fact-slider" min="0" max="12" value="5" oninput="updateFactorial()">
+        <span class="val-badge" id="fact-n-label">5</span>
+      </div>
+      <div class="result-box" id="fact-result"></div>
+    </div>
+
+    <h3>Call Tree untuk fact(5)</h3>
+    <div class="tree-wrap">
+      <svg width="480" height="240" viewBox="0 0 480 240">
+        <defs>
+          <marker id="arr2" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#b8aee0"/>
+          </marker>
+        </defs>
+        <!-- nodes vertical chain -->
+        <rect x="190" y="8" width="100" height="32" rx="7" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="29" text-anchor="middle" font-family="Courier New" font-size="12">fact(5)</text>
+
+        <rect x="190" y="60" width="100" height="32" rx="7" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="81" text-anchor="middle" font-family="Courier New" font-size="12">fact(4)</text>
+
+        <rect x="190" y="112" width="100" height="32" rx="7" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="133" text-anchor="middle" font-family="Courier New" font-size="12">fact(3)</text>
+
+        <rect x="190" y="164" width="100" height="32" rx="7" fill="#f4f0fc" stroke="#b8aee0" stroke-width="1.5"/>
+        <text x="240" y="185" text-anchor="middle" font-family="Courier New" font-size="12">fact(2)</text>
+
+        <rect x="190" y="216" width="100" height="32" rx="7" fill="#fce0c8" stroke="#f8c8a0" stroke-width="1.5"/>
+        <text x="240" y="237" text-anchor="middle" font-family="Courier New" font-size="12">fact(1)=1</text>
+
+        <!-- arrows down (calls) -->
+        <line x1="240" y1="40" x2="240" y2="57" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="240" y1="92" x2="240" y2="109" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="240" y1="144" x2="240" y2="161" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr2)"/>
+        <line x1="240" y1="196" x2="240" y2="213" stroke="#b8aee0" stroke-width="1.8" marker-end="url(#arr2)"/>
+
+        <!-- return values (right side) -->
+        <text x="310" y="28" font-family="Times New Roman" font-size="12" fill="#287850">→ 120</text>
+        <text x="310" y="80" font-family="Times New Roman" font-size="12" fill="#287850">→ 24</text>
+        <text x="310" y="132" font-family="Times New Roman" font-size="12" fill="#287850">→ 6</text>
+        <text x="310" y="184" font-family="Times New Roman" font-size="12" fill="#287850">→ 2</text>
+        <text x="310" y="236" font-family="Times New Roman" font-size="12" fill="#c05010">base case</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 4 : FIBONACCI
+══════════════════════════════════════════════ -->
+<div id="sec-fibonacci" class="section">
+  <div class="card band-mint">
+    <h2>10.2.3 Barisan Fibonacci</h2>
+    <p>Barisan Fibonacci adalah barisan bilangan bulat di mana dua nilai pertama adalah 1 dan setiap nilai berikutnya merupakan <strong>jumlah dua nilai sebelumnya</strong>.</p>
+    <div class="box box-mint">
+      1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, …
+    </div>
+    <h3>Relasi Rekurensi</h3>
+    <div style="text-align:center; background:#f0faf4; border-radius:10px; padding:14px; margin:12px 0; border:1.5px solid #9fd4b8; font-size:1.05rem;">
+      fib(n) = <strong>n</strong>, jika n ≤ 1 &nbsp;&nbsp;|&nbsp;&nbsp; fib(n) = <strong>fib(n−1) + fib(n−2)</strong>, jika n &gt; 1
+    </div>
+    <pre><span class="kw">def</span> <span class="fn">fib</span>( n ):
+    <span class="kw">assert</span> n &gt;= <span class="nm">1</span>, <span class="cm">"Fibonacci not defined for n &lt; 1."</span>
+    <span class="kw">if</span> n == <span class="nm">1</span> :
+        <span class="kw">return</span> <span class="nm">1</span>
+    <span class="kw">else</span> :
+        <span class="kw">return</span> <span class="fn">fib</span>(n - <span class="nm">1</span>) + <span class="fn">fib</span>(n - <span class="nm">2</span>)</pre>
+
+    <h3>Barisan (klik untuk highlight)</h3>
+    <div class="fib-row" id="fib-chips"></div>
+
+    <div class="interactive-area" style="background:#f0faf4;border-color:#9fd4b8;margin-top:18px;">
+      <h3 style="color:#287850">Coba Hitung fib(n)</h3>
+      <div class="input-row">
+        <label>n =</label>
+        <input type="range" id="fib-slider" min="1" max="15" value="6" oninput="updateFib()" style="accent-color:#9fd4b8;">
+        <span class="val-badge" id="fib-n-label" style="background:var(--mint);color:#2a6848;border-color:var(--mint-d);">6</span>
+      </div>
+      <div class="result-box" id="fib-result"></div>
+    </div>
+
+    <div class="box box-lav" style="margin-top:16px;">
+      fib() membuat <strong>dua</strong> recursive call dari setiap invokasi (bukan satu). Ini menyebabkan call tree tumbuh secara eksponensial — waktu: <strong>O(2ⁿ)</strong>.
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 5 : HOW IT WORKS
+══════════════════════════════════════════════ -->
+<div id="sec-how" class="section">
+  <div class="card band-peach">
+    <h2>10.3 Cara Kerja Rekursi</h2>
+    <p>Saat fungsi dipanggil, <em>activation record</em> dibuat secara otomatis untuk menyimpan:</p>
+    <div class="prop-grid">
+      <div class="prop-card" style="background:#fff6ee;border-color:#f8c8a0">
+        <div class="prop-num" style="font-size:1.5rem"></div>
+        <div class="prop-title">Return Address</div>
+        <div class="prop-desc">Lokasi instruksi berikutnya yang dieksekusi ketika fungsi selesai.</div>
+      </div>
+      <div class="prop-card" style="background:#fff6ee;border-color:#f8c8a0">
+        <div class="prop-num" style="font-size:1.5rem"></div>
+        <div class="prop-title">Local Variables</div>
+        <div class="prop-desc">Ruang penyimpanan untuk variabel lokal fungsi. Dibuat saat fungsi mulai, dihancurkan saat selesai.</div>
+      </div>
+    </div>
+    <div class="box box-peach">
+      <strong>Run Time Stack:</strong> Sistem menyimpan activation records pada sebuah <em>stack</em> tersembunyi. Stack ini bekerja seperti Stack ADT biasa — otomatis dikelola oleh sistem.
+    </div>
+
+    <h3>Simulasi Run Time Stack – fact(3)</h3>
+    <p style="font-size:0.92rem;color:var(--text-soft)">Stack tumbuh ke atas saat pemanggilan, mengempis saat return:</p>
+    <div id="stack-steps"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;">
+      <button class="btn btn-peach" onclick="stackPrev()" style="background:var(--peach);border-color:var(--peach-d);color:#904820;">◀ Prev</button>
+      <button class="btn btn-peach" onclick="stackNext()" style="background:var(--peach);border-color:var(--peach-d);color:#904820;">Next ▶</button>
+      <span id="stack-step-label" style="padding:8px 16px;font-size:0.9rem;color:var(--text-soft)"></span>
+    </div>
+  </div>
+
+  <div class="card band-sky">
+    <h2>10.3.3 Tail Recursion</h2>
+    <p><strong>Tail recursion</strong> terjadi ketika fungsi memiliki <em>satu</em> recursive call sebagai <strong>pernyataan terakhir</strong> fungsi tersebut.</p>
+    <pre><span class="cm"># Tail recursive – tidak perlu menyimpan nilai ke stack</span>
+<span class="kw">def</span> <span class="fn">printInorder</span>( node ):
+    <span class="kw">if</span> node <span class="kw">is not</span> None :
+        <span class="fn">print</span>( node.data )
+        <span class="fn">printInorder</span>( node.next )  <span class="cm"># ← last statement</span></pre>
+    <div class="box box-sky">
+      Tail recursion dapat dioptimasi menjadi iterative loop karena <strong>tidak ada nilai yang perlu disimpan</strong> saat recursive call kembali. Lebih efisien dalam penggunaan memori.
+    </div>
+    <table>
+      <tr><th></th><th>Tail Recursion</th><th>Non-Tail Recursion</th></tr>
+      <tr><td><strong>Recursive call</strong></td><td>Pernyataan terakhir</td><td>Bukan pernyataan terakhir</td></tr>
+      <tr><td><strong>Stack usage</strong></td><td>Bisa dioptimasi O(1)</td><td>O(n) stack frames</td></tr>
+      <tr><td><strong>Contoh</strong></td><td>printInorder()</td><td>fact(), fib()</td></tr>
+    </table>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 6 : HANOI
+══════════════════════════════════════════════ -->
+<div id="sec-hanoi" class="section">
+  <div class="card band-yellow">
+    <h2>10.4.2 Towers of Hanoi</h2>
+    <p>Puzzle Towers of Hanoi terdiri dari papan dengan <strong>3 tiang</strong> dan tumpukan cakram. Tujuannya: pindahkan semua cakram dari tiang asal ke tiang tujuan.</p>
+    <div class="box box-yellow">
+      <strong>Aturan:</strong> (1) Hanya satu cakram yang bisa dipindahkan sekaligus. (2) Cakram besar tidak boleh diletakkan di atas cakram kecil.
+    </div>
+    <h3>Solusi Rekursif</h3>
+    <pre><span class="kw">def</span> <span class="fn">move</span>( n, src, dest, temp ):
+    <span class="kw">if</span> n >= <span class="nm">1</span> :
+        <span class="fn">move</span>( n<span class="nm">-1</span>, src, temp, dest )      <span class="cm"># pindah n-1 cakram ke temp</span>
+        <span class="fn">print</span>( <span class="cm">"Move %d -> %d"</span> % (src, dest))  <span class="cm"># pindah cakram terbesar</span>
+        <span class="fn">move</span>( n<span class="nm">-1</span>, temp, dest, src )     <span class="cm"># pindah n-1 cakram ke dest</span></pre>
+    <div class="box box-pink">
+      <strong>Kompleksitas Waktu:</strong> O(2ⁿ) — eksponensial. Untuk n cakram diperlukan 2ⁿ − 1 langkah.
+    </div>
+
+    <h3>Simulasi Interaktif</h3>
+    <div class="hanoi-controls">
+      <label style="font-weight:bold;">Cakram: </label>
+      <input type="range" id="hanoi-n" min="2" max="5" value="3" oninput="document.getElementById('hanoi-n-label').textContent=this.value" style="accent-color:#f0d878; width:120px;">
+      <span id="hanoi-n-label" class="val-badge" style="background:var(--yellow);color:#705820;border-color:var(--yellow-d);">3</span>
+      <button class="btn" style="background:var(--yellow);border-color:var(--yellow-d);color:#705820;" onclick="runHanoi()">▶ Jalankan</button>
+      <button class="btn btn-lav" onclick="resetHanoi()">↺ Reset</button>
+    </div>
+    <canvas id="hanoi-canvas" width="520" height="220"></canvas>
+    <div style="display:flex;gap:10px;margin:10px 0;flex-wrap:wrap;">
+      <button class="btn" style="background:var(--peach);border-color:var(--peach-d);color:#904820;" onclick="hanoiStepBack()">◀ Prev</button>
+      <button class="btn" style="background:var(--mint);border-color:var(--mint-d);color:#2a6848;" onclick="hanoiStepFwd()">Next ▶</button>
+      <span id="hanoi-step-info" style="padding:7px 12px;font-size:0.9rem;color:var(--text-soft);"></span>
+    </div>
+    <div id="hanoi-moves-list"></div>
+    <p style="margin-top:10px;font-size:0.9rem;" id="hanoi-move-count"></p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 7 : BINARY SEARCH
+══════════════════════════════════════════════ -->
+<div id="sec-binsearch" class="section">
+  <div class="card band-sky">
+    <h2>10.4.1 Recursive Binary Search</h2>
+    <p>Binary search membagi dua urutan terurut secara rekursif untuk menemukan target. Setiap rekursi memangkas setengah elemen yang tersisa.</p>
+    <div class="box box-sky">
+      <strong>Kompleksitas Waktu:</strong> O(log n) — sangat efisien. Setiap langkah memperhalving ruang pencarian.
+    </div>
+    <pre><span class="kw">def</span> <span class="fn">recBinarySearch</span>( target, theSeq, first, last ):
+    <span class="kw">if</span> first &gt; last :          <span class="cm"># base case 1: tidak ditemukan</span>
+        <span class="kw">return</span> <span class="nm">False</span>
+    mid = (last + first) // <span class="nm">2</span>
+    <span class="kw">if</span> theSeq[mid] == target :  <span class="cm"># base case 2: ditemukan!</span>
+        <span class="kw">return</span> <span class="nm">True</span>
+    <span class="kw">elif</span> target &lt; theSeq[mid] :
+        <span class="kw">return</span> <span class="fn">recBinarySearch</span>( target, theSeq, first, mid<span class="nm">-1</span> )
+    <span class="kw">else</span> :
+        <span class="kw">return</span> <span class="fn">recBinarySearch</span>( target, theSeq, mid<span class="nm">+1</span>, last )</pre>
+
+    <h3>Simulasi Pencarian</h3>
+    <div class="interactive-area" style="background:#f0f8fe;border-color:#98ccec;">
+      <div class="input-row" style="flex-wrap:wrap;gap:10px;">
+        <label style="font-weight:bold;">Target:</label>
+        <input type="number" id="bs-target" value="23" min="1" max="64" style="width:80px;padding:6px 10px;border-radius:8px;border:1.5px solid #98ccec;font-family:'Times New Roman',serif;font-size:1rem;">
+        <button class="btn" style="background:var(--sky);border-color:var(--sky-d);color:#1a5880;" onclick="runBinarySearch()">Cari</button>
+        <button class="btn btn-lav" onclick="resetBS()">↺ Reset</button>
+      </div>
+      <div class="bs-array" id="bs-array"></div>
+      <div id="bs-log" style="background:white;border-radius:8px;padding:10px 14px;border:1.5px solid var(--border);font-size:0.88rem;line-height:1.9;min-height:60px;font-family:'Courier New',monospace;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════
+     SECTION 8 : QUEENS
+══════════════════════════════════════════════ -->
+<div id="sec-queens" class="section">
+  <div class="card band-pink">
+    <h2>10.5 Masalah N-Queens</h2>
+    <p>Tempatkan <strong>N ratu</strong> pada papan catur N×N sehingga tidak ada ratu yang menyerang ratu lainnya. Ratu menyerang secara horizontal, vertikal, dan diagonal.</p>
+    <div class="box box-lav">
+      Untuk <strong>8-Queens</strong> terdapat <strong>92 solusi</strong>. Masalah ini diselesaikan menggunakan rekursi + <strong>backtracking</strong>.
+    </div>
+    <h3>Algoritma Rekursif</h3>
+    <pre><span class="kw">def</span> <span class="fn">solveNQueens</span>( board, col ):
+    <span class="kw">if</span> board.numQueens() == board.size() :
+        <span class="kw">return</span> <span class="nm">True</span>   <span class="cm"># base case: solusi ditemukan</span>
+    <span class="kw">else</span> :
+        <span class="kw">for</span> row <span class="kw">in</span> <span class="fn">range</span>( board.size() ):
+            <span class="kw">if</span> board.unguarded( row, col ):
+                board.placeQueen( row, col )
+                <span class="kw">if</span> <span class="fn">solveNQueens</span>( board, col+<span class="nm">1</span> ):
+                    <span class="kw">return</span> <span class="nm">True</span>
+                board.removeQueen( row, col )  <span class="cm"># backtrack!</span>
+        <span class="kw">return</span> <span class="nm">False</span></pre>
+
+    <h3>Visualisasi N-Queens</h3>
+    <div class="hanoi-controls">
+      <label style="font-weight:bold;">N =</label>
+      <input type="range" id="queens-n" min="4" max="8" value="6" oninput="document.getElementById('queens-n-label').textContent=this.value" style="accent-color:var(--pink-d);width:100px;">
+      <span id="queens-n-label" class="val-badge" style="background:var(--pink);color:#8a3050;border-color:var(--pink-d);">6</span>
+      <button class="btn btn-pink" onclick="solveQueens()">Selesaikan</button>
+      <button class="btn btn-lav" onclick="nextQueensSolution()">▶ Solusi Berikutnya</button>
+    </div>
+    <div class="queens-info">
+      <span class="queens-stat" id="queens-status" style="background:var(--pink);color:#8a3050;padding:6px 16px;border-radius:50px;font-family:'Times New Roman',serif;"></span>
+      <span class="queens-stat" id="queens-count" style="background:var(--lavender);color:#4a3888;padding:6px 16px;border-radius:50px;font-family:'Times New Roman',serif;"></span>
+    </div>
+    <canvas id="queens-canvas" width="480" height="480"></canvas>
+    <div class="box box-mint" style="margin-top:16px;">
+      <strong>Backtracking:</strong> Saat tidak ada posisi valid di kolom saat ini, ratu diangkat dan algoritma kembali ke kolom sebelumnya untuk mencoba posisi lain — persis seperti menelusuri labirin.
+    </div>
+  </div>
+</div>
+
+</main><!-- end main -->
+
+
+<script>
+/* ─── TABS ─── */
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+/* ─── FACTORIAL CALCULATOR ─── */
+function factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n-1);
+}
+function factSteps(n) {
+  let steps = [];
+  function go(k) {
+    if (k <= 1) { steps.push(`fact(${k}) = 1`); return 1; }
+    let r = go(k-1);
+    let val = k * r;
+    steps.push(`fact(${k}) = ${k} × fact(${k-1}) = ${k} × ${r} = ${val}`);
+    return val;
+  }
+  go(n); return steps;
+}
+function updateFactorial() {
+  const n = +document.getElementById('fact-slider').value;
+  document.getElementById('fact-n-label').textContent = n;
+  const steps = factSteps(n);
+  document.getElementById('fact-result').innerHTML =
+    steps.map(s => `<div>${s}</div>`).join('') +
+    `<div style="margin-top:8px;font-size:1.05rem;"><strong>${n}! = ${factorial(n)}</strong></div>`;
+}
+updateFactorial();
+
+/* ─── FIBONACCI ─── */
+function fibSeq(max) {
+  let a=0, b=1, seq=[1,1];
+  for(let i=2;i<max;i++) { let c=a+b; a=b; b=c; seq.push(c); }
+  return seq;
+}
+const fibSeqData = fibSeq(16);
+(function buildFibChips(){
+  const cont = document.getElementById('fib-chips');
+  fibSeqData.forEach((v,i) => {
+    const el = document.createElement('span');
+    el.className = 'fib-chip';
+    el.id = 'fib-chip-'+i;
+    el.textContent = `F(${i+1})=${v}`;
+    el.onclick = () => {
+      document.querySelectorAll('.fib-chip').forEach(c=>c.classList.remove('highlight'));
+      el.classList.add('highlight');
+    };
+    cont.appendChild(el);
+  });
+})();
+function fib(n){if(n<=1)return 1;return fib(n-1)+fib(n-2);}
+function updateFib(){
+  const n=+document.getElementById('fib-slider').value;
+  document.getElementById('fib-n-label').textContent=n;
+  const val=fib(n);
+  document.getElementById('fib-chip-'+(n-1)) &&
+    document.querySelectorAll('.fib-chip').forEach(c=>c.classList.remove('highlight'));
+  const chip = document.getElementById('fib-chip-'+(n-1));
+  if(chip) chip.classList.add('highlight');
+  document.getElementById('fib-result').innerHTML=
+    `<strong>fib(${n}) = ${val}</strong>  <span style="color:var(--text-soft);font-size:0.9rem">
+    (memerlukan ~${Math.pow(2,n)} operasi – O(2ⁿ))</span>`;
+}
+updateFib();
+
+/* ─── STACK DEMO ─── */
+const stackStates = [
+  { label: "Mulai: memanggil main()", frames: [{fn:"main()", info:"y = fact(3)", color:"#fff6ee"}] },
+  { label: "fact(3) dipanggil", frames: [{fn:"fact(3)",info:"n=3, return 3×fact(2)",color:"#f4f0fc"},{fn:"main()",info:"y = fact(3)",color:"#fff6ee"}] },
+  { label: "fact(2) dipanggil", frames: [{fn:"fact(2)",info:"n=2, return 2×fact(1)",color:"#fef0f4"},{fn:"fact(3)",info:"n=3",color:"#f4f0fc"},{fn:"main()",info:"y = fact(3)",color:"#fff6ee"}] },
+  { label: "fact(1) – BASE CASE", frames: [{fn:"fact(1)",info:"n=1, return 1 ← base!",color:"#f0faf4"},{fn:"fact(2)",info:"n=2",color:"#fef0f4"},{fn:"fact(3)",info:"n=3",color:"#f4f0fc"},{fn:"main()",info:"y = fact(3)",color:"#fff6ee"}] },
+  { label: "fact(1) return 1 → pop", frames: [{fn:"fact(2)",info:"n=2, = 2×1 = 2",color:"#fef0f4"},{fn:"fact(3)",info:"n=3",color:"#f4f0fc"},{fn:"main()",info:"y = fact(3)",color:"#fff6ee"}] },
+  { label: "fact(2) return 2 → pop", frames: [{fn:"fact(3)",info:"n=3, = 3×2 = 6",color:"#f4f0fc"},{fn:"main()",info:"y = fact(3)",color:"#fff6ee"}] },
+  { label: "fact(3) return 6 → pop", frames: [{fn:"main()",info:"y = 6 ✓",color:"#f0faf4"}] },
+];
+let stackStep = 0;
+function renderStack(){
+  const state = stackStates[stackStep];
+  document.getElementById('stack-step-label').textContent = `Langkah ${stackStep+1}/${stackStates.length}: ${state.label}`;
+  const cont = document.getElementById('stack-steps');
+  cont.innerHTML = '<div class="stack-container">' +
+    state.frames.map(f=>`<div class="stack-frame" style="background:${f.color}">${f.fn}: <em>${f.info}</em></div>`).join('<div class="stack-arrow">↑</div>') +
+    '<div style="text-align:center;font-size:0.8rem;color:#aaa;margin-top:4px">─ stack bottom ─</div></div>';
+}
+function stackPrev(){ if(stackStep>0){stackStep--;renderStack();} }
+function stackNext(){ if(stackStep<stackStates.length-1){stackStep++;renderStack();} }
+renderStack();
+
+/* ─── TOWERS OF HANOI ─── */
+let hanoiMoves = [], hanoiStep = 0, hanoiState = [[],[],[]], hanoiN=3;
+const COLORS_DISC = ['#f4c6d0','#d8d0f0','#c8ead8','#fce0c8','#c8e4f4'];
+function generateHanoi(n,src,dest,temp){
+  if(n>=1){ generateHanoi(n-1,src,temp,dest); hanoiMoves.push([src-1,dest-1]); generateHanoi(n-1,temp,dest,src); }
+}
+function resetHanoiState(n){
+  hanoiState=[[],[],[]];
+  for(let i=n;i>=1;i--) hanoiState[0].push(i);
+}
+function runHanoi(){
+  hanoiN=+document.getElementById('hanoi-n').value;
+  hanoiMoves=[]; generateHanoi(hanoiN,1,3,2);
+  resetHanoiState(hanoiN); hanoiStep=0;
+  const list=document.getElementById('hanoi-moves-list');
+  list.innerHTML=hanoiMoves.map((m,i)=>`<span style="margin-right:8px">${i+1}. Tiang ${m[0]+1}→${m[1]+1}</span>`).join('');
+  document.getElementById('hanoi-move-count').innerHTML=
+    `Total langkah: <strong>${hanoiMoves.length}</strong> = 2<sup>${hanoiN}</sup>−1`;
+  document.getElementById('hanoi-step-info').textContent = `Langkah 0/${hanoiMoves.length}`;
+  drawHanoi();
+}
+function resetHanoi(){
+  hanoiN=+document.getElementById('hanoi-n').value;
+  hanoiMoves=[]; resetHanoiState(hanoiN); hanoiStep=0;
+  document.getElementById('hanoi-moves-list').innerHTML='';
+  document.getElementById('hanoi-move-count').textContent='';
+  document.getElementById('hanoi-step-info').textContent='';
+  drawHanoi();
+}
+function hanoiStepFwd(){
+  if(hanoiMoves.length===0){runHanoi();return;}
+  if(hanoiStep>=hanoiMoves.length) return;
+  const [s,d]=hanoiMoves[hanoiStep]; hanoiStep++;
+  hanoiState[d].push(hanoiState[s].pop());
+  document.getElementById('hanoi-step-info').textContent=`Langkah ${hanoiStep}/${hanoiMoves.length}: Tiang ${s+1} → Tiang ${d+1}`;
+  drawHanoi();
+}
+function hanoiStepBack(){
+  if(hanoiStep<=0) return;
+  hanoiStep--;
+  const [s,d]=hanoiMoves[hanoiStep];
+  hanoiState[s].push(hanoiState[d].pop());
+  document.getElementById('hanoi-step-info').textContent=`Mundur ke langkah ${hanoiStep}/${hanoiMoves.length}`;
+  drawHanoi();
+}
+function drawHanoi(){
+  const cv=document.getElementById('hanoi-canvas'), cx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle='#fdf8ff'; cx.fillRect(0,0,W,H);
+  // base
+  cx.fillStyle='#d0b8e0'; cx.fillRect(20,H-28,W-40,16); cx.beginPath();
+  // poles
+  const poleX=[W*0.2, W*0.5, W*0.8], poleH=160;
+  poleX.forEach(x=>{cx.fillStyle='#b8a0d0';cx.fillRect(x-6,H-28-poleH,12,poleH);});
+  // discs
+  const maxW=100, discH=18;
+  hanoiState.forEach((pole,pi)=>{
+    pole.forEach((disc,di)=>{
+      const w=maxW*(disc/hanoiN)*0.9+maxW*0.1;
+      const x=poleX[pi]-w/2;
+      const y=H-28-discH*(di+1)-4;
+      cx.fillStyle=COLORS_DISC[(disc-1)%COLORS_DISC.length];
+      cx.strokeStyle='rgba(100,80,120,0.3)';cx.lineWidth=1.5;
+      cx.beginPath();cx.roundRect(x,y,w,discH-2,6);cx.fill();cx.stroke();
+      cx.fillStyle='#3a3040';cx.font='bold 11px Times New Roman';
+      cx.textAlign='center';cx.fillText(disc,poleX[pi],y+12);
+    });
+  });
+  // pole labels
+  ['Tiang 1','Tiang 2','Tiang 3'].forEach((lbl,i)=>{
+    cx.fillStyle='#6a5e78';cx.font='12px Times New Roman';cx.textAlign='center';
+    cx.fillText(lbl,poleX[i],H-8);
+  });
+}
+resetHanoi();
+
+/* ─── BINARY SEARCH ─── */
+const bsArr=[2,4,5,10,13,18,23,29,31,51,64];
+let bsSteps=[], bsStepIdx=0;
+function buildBSArr(states){
+  const cont=document.getElementById('bs-array'); cont.innerHTML='';
+  bsArr.forEach((v,i)=>{
+    const cell=document.createElement('div');
+    cell.className='bs-cell';
+    cell.id='bs-cell-'+i;
+    cell.innerHTML=`${v}<span class="idx">[${i}]</span>`;
+    cont.appendChild(cell);
+  });
+  colorBS(states||{});
+}
+function colorBS(states){
+  bsArr.forEach((_,i)=>{
+    const el=document.getElementById('bs-cell-'+i);
+    el.className='bs-cell';
+    if(states.found===i) el.classList.add('found');
+    else if(states.mid===i) el.classList.add('mid');
+    else if(states.out&&states.out.includes(i)) el.classList.add('out');
+    else if(states.range&&(i>=states.range[0]&&i<=states.range[1])) el.classList.add('range');
+  });
+}
+function runBinarySearch(){
+  const target=+document.getElementById('bs-target').value;
+  bsSteps=[]; bsStepIdx=0;
+  let first=0, last=bsArr.length-1;
+  const log=[]; let found=false, foundIdx=-1;
+  while(first<=last){
+    const mid=Math.floor((first+last)/2);
+    bsSteps.push({first,last,mid,target,found:false});
+    log.push(`first=${first}, last=${last}, mid=${mid} (val=${bsArr[mid]})`);
+    if(bsArr[mid]===target){found=true;foundIdx=mid;bsSteps[bsSteps.length-1].foundIt=mid;break;}
+    else if(target<bsArr[mid]) last=mid-1;
+    else first=mid+1;
+  }
+  const out=[];
+  if(bsSteps.length>0){const s=bsSteps[bsSteps.length-1];for(let i=0;i<bsArr.length;i++){if(i<s.first||i>s.last)out.push(i);}}
+  const logEl=document.getElementById('bs-log');
+  if(found) logEl.innerHTML=log.map(l=>`<div>${l}</div>`).join('')+`<div style="color:#287850;font-weight:bold;margin-top:6px">Ditemukan! arr[${foundIdx}] = ${target}</div>`;
+  else logEl.innerHTML=log.map(l=>`<div>${l}</div>`).join('')+`<div style="color:#c04040;font-weight:bold;margin-top:6px">❌ ${target} tidak ditemukan dalam array.</div>`;
+  const last2=bsSteps.length>0?bsSteps[bsSteps.length-1]:{};
+  colorBS({found:foundIdx>=0?foundIdx:undefined, range:[last2.first||0,last2.last||0], out});
+}
+function resetBS(){buildBSArr();document.getElementById('bs-log').innerHTML='';}
+buildBSArr();
+
+/* ─── N-QUEENS ─── */
+let queensSolutions=[], queensSolIdx=0;
+function solveQueens(){
+  const n=+document.getElementById('queens-n').value;
+  queensSolutions=[];
+  const board=Array(n).fill(-1);
+  function safe(row,col){
+    for(let c=0;c<col;c++){
+      if(board[c]===row||Math.abs(board[c]-row)===Math.abs(c-col)) return false;
+    }
+    return true;
+  }
+  function solve(col){
+    if(col===n){queensSolutions.push([...board]);return;}
+    for(let row=0;row<n;row++){
+      if(safe(row,col)){board[col]=row;solve(col+1);board[col]=-1;}
+    }
+  }
+  solve(0); queensSolIdx=0;
+  document.getElementById('queens-status').textContent=queensSolutions.length>0?`Solusi ditemukan!`:`Tidak ada solusi`;
+  document.getElementById('queens-count').textContent=`Total: ${queensSolutions.length} solusi`;
+  if(queensSolutions.length>0) drawQueens(n,queensSolutions[0]);
+}
+function nextQueensSolution(){
+  if(queensSolutions.length===0){solveQueens();return;}
+  const n=+document.getElementById('queens-n').value;
+  queensSolIdx=(queensSolIdx+1)%queensSolutions.length;
+  document.getElementById('queens-status').textContent=`Solusi ${queensSolIdx+1} / ${queensSolutions.length}`;
+  drawQueens(n,queensSolutions[queensSolIdx]);
+}
+function drawQueens(n,placement){
+  const cv=document.getElementById('queens-canvas');
+  const size=Math.min(cv.width,cv.height);
+  cv.width=size; cv.height=size;
+  const cx=cv.getContext('2d');
+  const cell=size/n;
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    cx.fillStyle=(r+c)%2===0?'#f8f0fc':'#e8d8f0';
+    cx.fillRect(c*cell,r*cell,cell,cell);
+  }
+  if(placement) placement.forEach((row,col)=>{
+    cx.font=`${cell*0.72}px serif`;
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText('♛',col*cell+cell/2,row*cell+cell/2);
+  });
+  cx.strokeStyle='#c8b8e0';cx.lineWidth=1;
+  for(let i=0;i<=n;i++){
+    cx.beginPath();cx.moveTo(i*cell,0);cx.lineTo(i*cell,size);cx.stroke();
+    cx.beginPath();cx.moveTo(0,i*cell);cx.lineTo(size,i*cell);cx.stroke();
+  }
+}
+// default draw
+(function(){ const cv=document.getElementById('queens-canvas'); const n=6; const board=Array(n).fill(-1);
+  function safe(r,c){for(let cc=0;cc<c;cc++){if(board[cc]===r||Math.abs(board[cc]-r)===Math.abs(cc-c))return false;}return true;}
+  function solve(col){if(col===n)return true;for(let r=0;r<n;r++){if(safe(r,col)){board[col]=r;if(solve(col+1))return true;board[col]=-1;}}return false;}
+  solve(0); drawQueens(n,board);
+})();
+</script>
+</body>
+</html>
