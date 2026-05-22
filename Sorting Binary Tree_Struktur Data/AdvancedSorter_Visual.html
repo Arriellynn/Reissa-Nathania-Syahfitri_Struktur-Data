@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdvancedSorter – Visualisasi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+  :root {
+    --bg:          #faf6f2;
+    --surface:     #ffffff;
+    --pink:        #f5c9d5;
+    --pink-d:      #e8a0b4;
+    --lavender:    #dbd4f2;
+    --lavender-d:  #bab0e2;
+    --mint:        #c6ebd8;
+    --mint-d:      #9dd4b6;
+    --peach:       #fde0c4;
+    --peach-d:     #f8c090;
+    --sky:         #c6e4f4;
+    --sky-d:       #96cce8;
+    --yellow:      #faf0be;
+    --yellow-d:    #f0d870;
+    --text:        #38303e;
+    --text-soft:   #6a5e74;
+    --border:      #e6dce6;
+    --radius:      16px;
+    --radius-sm:   10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #fceef4 0%, #ede8f8 45%, #daeef8 100%);
+    padding: 56px 40px 46px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 15% 60%, rgba(245,201,213,.35) 0%, transparent 55%),
+                radial-gradient(ellipse at 85% 25%, rgba(219,212,242,.35) 0%, transparent 55%);
+    pointer-events: none;
+  }
+  .chapter-label {
+    font-size: 0.82rem; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--text-soft);
+    margin-bottom: 10px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: clamp(2.2rem, 5vw, 3.6rem);
+    font-weight: 900; color: var(--text); line-height: 1.15;
+    position: relative;
+  }
+  .header-sub {
+    margin-top: 12px; font-size: 1rem;
+    color: var(--text-soft); font-style: italic;
+  }
+  .pill-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center; margin-top: 24px; position: relative;
+  }
+  .pill {
+    padding: 5px 16px; border-radius: 50px; font-size: 0.8rem;
+    font-weight: bold; border: 1.5px solid transparent;
+  }
+  .pill-pink   { background: var(--pink);     border-color: var(--pink-d);     color: #882040; }
+  .pill-lav    { background: var(--lavender); border-color: var(--lavender-d); color: #483880; }
+  .pill-mint   { background: var(--mint);     border-color: var(--mint-d);     color: #286040; }
+
+  /* TABS */
+  .tabs-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(250,246,242,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding: 10px 24px; justify-content: center;
+  }
+  .tab-btn {
+    padding: 7px 18px; border: 1.5px solid var(--border);
+    border-radius: 50px; background: var(--surface);
+    font-family: 'Times New Roman', serif; font-size: 0.82rem;
+    cursor: pointer; color: var(--text-soft);
+    transition: all .2s; font-weight: bold;
+  }
+  .tab-btn:hover, .tab-btn.active {
+    background: var(--pink); border-color: var(--pink-d); color: #882040;
+  }
+
+  /* MAIN */
+  main { max-width: 960px; margin: 0 auto; padding: 36px 22px 80px; }
+
+  .section { display: none; animation: fadeUp .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* CARDS */
+  .card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 20px rgba(100,80,120,.09);
+    padding: 30px 34px; margin-bottom: 26px;
+  }
+  .card h2 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: 1.5rem; font-weight: 700; color: var(--text);
+    margin-bottom: 12px; border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .card h3 {
+    font-size: 1.08rem; font-weight: bold; color: var(--text);
+    margin: 18px 0 8px;
+  }
+  .card p { margin-bottom: 10px; font-size: .98rem; }
+
+  .band-pink   { border-top: 5px solid var(--pink-d); }
+  .band-lav    { border-top: 5px solid var(--lavender-d); }
+  .band-mint   { border-top: 5px solid var(--mint-d); }
+  .band-peach  { border-top: 5px solid var(--peach-d); }
+
+  /* CODE */
+  pre {
+    background: #f8f4fc; border: 1.5px solid #ddd4e8;
+    border-radius: var(--radius-sm); padding: 18px 22px;
+    font-family: 'Courier New', monospace; font-size: .88rem;
+    line-height: 1.7; overflow-x: auto; margin: 12px 0; color: #281640;
+  }
+  .kw { color: #8830a0; font-weight: bold; }
+  .fn { color: #1860a0; font-weight: bold; }
+  .cm { color: #888; font-style: italic; }
+  .nm { color: #c05010; }
+
+  /* HIGHLIGHT BOXES */
+  .box {
+    border-radius: var(--radius-sm); padding: 14px 18px;
+    margin: 12px 0; border-left: 4px solid transparent; font-size: .96rem;
+  }
+  .box-pink   { background: #fef0f4; border-color: var(--pink-d); }
+  .box-lav    { background: #f4f0fc; border-color: var(--lavender-d); }
+  .box-mint   { background: #f0faf4; border-color: var(--mint-d); }
+  .box-peach  { background: #fff6ee; border-color: var(--peach-d); }
+  .box-sky    { background: #f0f8fe; border-color: var(--sky-d); }
+
+  /* CONTROLS */
+  .controls {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin: 14px 0;
+  }
+  .btn {
+    padding: 7px 20px; border-radius: 50px;
+    border: 1.5px solid transparent;
+    font-family: 'Times New Roman', serif; font-size: .88rem;
+    font-weight: bold; cursor: pointer; transition: all .18s;
+  }
+  .btn-pink  { background: var(--pink);     border-color: var(--pink-d);     color: #882040; }
+  .btn-pink:hover  { background: var(--pink-d);     color: #fff; }
+  .btn-lav   { background: var(--lavender); border-color: var(--lavender-d); color: #483880; }
+  .btn-lav:hover   { background: var(--lavender-d); color: #fff; }
+  .btn-mint  { background: var(--mint);     border-color: var(--mint-d);     color: #286040; }
+  .btn-mint:hover  { background: var(--mint-d);     color: #fff; }
+  .btn-peach { background: var(--peach);    border-color: var(--peach-d);    color: #804020; }
+  .btn-peach:hover { background: var(--peach-d);    color: #fff; }
+
+  .val-badge {
+    padding: 3px 14px; border-radius: 50px; font-weight: bold;
+    font-size: .92rem; border: 1.5px solid transparent;
+  }
+  .badge-pink { background: var(--pink); border-color: var(--pink-d); color: #882040; }
+  .badge-lav  { background: var(--lavender); border-color: var(--lavender-d); color: #483880; }
+  .badge-mint { background: var(--mint); border-color: var(--mint-d); color: #286040; }
+
+  input[type=text], input[type=number] {
+    padding: 6px 12px; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    font-family: 'Times New Roman', serif; font-size: .95rem;
+    background: white; color: var(--text);
+  }
+  input[type=range] { width: 130px; }
+
+  /* SORT VISUALIZER */
+  .bar-canvas-wrap {
+    overflow-x: auto;
+    background: #fdf8ff;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    padding: 12px;
+    margin: 14px 0;
+  }
+  #sort-canvas, #qs-canvas {
+    display: block; margin: 0 auto;
+    background: transparent;
+  }
+
+  /* LINKED LIST */
+  .ll-canvas-wrap {
+    overflow-x: auto;
+    background: #f8fdf8;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    padding: 12px; margin: 14px 0;
+  }
+  #ll-canvas { display: block; margin: 0 auto; background: transparent; }
+
+  /* LOG */
+  .log-box {
+    background: white; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    padding: 10px 16px; font-family: 'Courier New', monospace;
+    font-size: .84rem; line-height: 1.9; min-height: 48px;
+    max-height: 180px; overflow-y: auto;
+  }
+
+  /* STEP INFO */
+  .step-info {
+    font-size: .88rem; color: var(--text-soft);
+    padding: 6px 14px; background: var(--yellow);
+    border-radius: 50px; border: 1.5px solid var(--yellow-d);
+    display: inline-block; font-weight: bold;
+  }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: .93rem; margin: 12px 0; }
+  th { background: var(--pink); padding: 9px 12px; text-align: left;
+       font-weight: bold; border: 1px solid var(--border); }
+  td { padding: 8px 12px; border: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #fdf4f8; }
+
+  @media (max-width: 600px) {
+    header { padding: 36px 18px 32px; }
+    .card  { padding: 20px 16px; }
+    .tab-btn { font-size: .74rem; padding: 5px 11px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="chapter-label">Struktur Data &nbsp;·&nbsp; Sorting Lanjutan</div>
+  <h1>AdvancedSorter<br>
+    <small style="font-size:.48em;font-weight:400;color:var(--text-soft)">Merge Sort · Linked List Sort · Quick Sort</small>
+  </h1>
+  <p class="header-sub">Visualisasi interaktif tiga algoritma pengurutan dengan animasi langkah-per-langkah</p>
+  <div class="pill-row">
+    <span class="pill pill-pink">Array Merge Sort</span>
+    <span class="pill pill-lav">Linked List Sort</span>
+    <span class="pill pill-mint">Quick Sort</span>
+  </div>
+</header>
+
+<nav class="tabs-bar">
+  <button class="tab-btn active" onclick="showSec('merge')">Array Merge Sort</button>
+  <button class="tab-btn" onclick="showSec('ll')">Linked List Sort</button>
+  <button class="tab-btn" onclick="showSec('quick')">Quick Sort</button>
+  <button class="tab-btn" onclick="showSec('theory')">Teori Singkat</button>
+</nav>
+
+<main>
+
+<!-- ============ MERGE SORT ============ -->
+<div id="sec-merge" class="section active">
+  <div class="card band-pink">
+    <h2>Array Merge Sort</h2>
+    <p>Menggunakan <strong>satu tmpArray tunggal</strong> berukuran n yang dialokasi sekali di awal. Setiap rekursi menggunakan virtual sublist tanpa membuat array baru.</p>
+    <pre><span class="kw">def</span> <span class="fn">_merge_virtual</span>(self, arr, left_start, mid, right_end, tmp_array):
+    a, b, k = left_start, mid+<span class="nm">1</span>, left_start
+    <span class="kw">while</span> a &lt;= mid <span class="kw">and</span> b &lt;= right_end:
+        <span class="kw">if</span> arr[a] &lt;= arr[b]:   <span class="cm"># &lt;= menjamin STABLE</span>
+            tmp_array[k] = arr[a]; a += <span class="nm">1</span>
+        <span class="kw">else</span>:
+            tmp_array[k] = arr[b]; b += <span class="nm">1</span>
+        k += <span class="nm">1</span>
+    <span class="cm"># salin sisa, lalu copy balik ke arr</span></pre>
+
+    <h3>Animasi Pengurutan</h3>
+    <div class="controls">
+      <label>Input:</label>
+      <input type="text" id="merge-input" value="5,2,8,1,9,3,7,4,6" style="width:200px;">
+      <button class="btn btn-pink" onclick="initMerge()">Mulai</button>
+      <button class="btn btn-lav" onclick="mergeStepFwd()">Langkah Berikutnya</button>
+      <button class="btn btn-peach" onclick="mergeAuto()">Jalankan Semua</button>
+    </div>
+    <span class="step-info" id="merge-step-info">Masukkan data lalu tekan Mulai</span>
+    <div class="bar-canvas-wrap">
+      <canvas id="sort-canvas" width="700" height="200"></canvas>
+    </div>
+    <div class="log-box" id="merge-log"></div>
+  </div>
+</div>
+
+<!-- ============ LINKED LIST ============ -->
+<div id="sec-ll" class="section">
+  <div class="card band-lav">
+    <h2>Linked List Merge Sort</h2>
+    <p>Menggunakan <strong>fast-slow pointer</strong> untuk split dan <strong>dummy node</strong> untuk merge. Tidak ada alokasi node baru selama sorting.</p>
+    <pre><span class="kw">def</span> <span class="fn">_split_linked_list</span>(self, head):
+    mid_point = head
+    cur_node  = head.next
+    <span class="kw">while</span> cur_node <span class="kw">and</span> cur_node.next:
+        mid_point = mid_point.next      <span class="cm"># +1 langkah</span>
+        cur_node  = cur_node.next.next  <span class="cm"># +2 langkah</span>
+    right_head     = mid_point.next
+    mid_point.next = <span class="nm">None</span>             <span class="cm"># putus di tengah</span>
+    <span class="kw">return</span> right_head</pre>
+
+    <h3>Animasi Linked List Sort</h3>
+    <div class="controls">
+      <label>Input (pisah koma):</label>
+      <input type="text" id="ll-input" value="3,1,4,1,5,9,2,6" style="width:200px;">
+      <button class="btn btn-lav" onclick="initLL()">Mulai</button>
+      <button class="btn btn-pink" onclick="llStepFwd()">Langkah Berikutnya</button>
+      <button class="btn btn-peach" onclick="llAuto()">Jalankan Semua</button>
+    </div>
+    <span class="step-info" id="ll-step-info">Masukkan data lalu tekan Mulai</span>
+    <div class="ll-canvas-wrap">
+      <canvas id="ll-canvas" width="700" height="160"></canvas>
+    </div>
+    <div class="log-box" id="ll-log"></div>
+  </div>
+</div>
+
+<!-- ============ QUICK SORT ============ -->
+<div id="sec-quick" class="section">
+  <div class="card band-mint">
+    <h2>Quick Sort (Median-of-Three)</h2>
+    <p>Pivot dipilih dari <strong>median tiga elemen</strong> (first, mid, last) untuk menghindari worst-case O(n²) pada data terurut. Jika kedalaman rekursi melebihi <code>2·log₂(n)</code>, otomatis fallback ke Merge Sort.</p>
+    <pre><span class="cm"># Pilih median dari arr[first], arr[mid], arr[last]</span>
+<span class="kw">if</span> arr[first] > arr[mid]:   arr[first], arr[mid]  = arr[mid],  arr[first]
+<span class="kw">if</span> arr[first] > arr[last]:  arr[first], arr[last] = arr[last], arr[first]
+<span class="kw">if</span> arr[mid]   > arr[last]:  arr[mid],   arr[last] = arr[last], arr[mid]
+arr[first], arr[mid] = arr[mid], arr[first]  <span class="cm"># pivot ke depan</span></pre>
+
+    <h3>Animasi Quick Sort</h3>
+    <div class="controls">
+      <label>Input:</label>
+      <input type="text" id="qs-input" value="9,8,7,6,5,4,3,2,1" style="width:200px;">
+      <button class="btn btn-mint" onclick="initQS()">Mulai</button>
+      <button class="btn btn-lav" onclick="qsStepFwd()">Langkah Berikutnya</button>
+      <button class="btn btn-peach" onclick="qsAuto()">Jalankan Semua</button>
+    </div>
+    <span class="step-info" id="qs-step-info">Masukkan data lalu tekan Mulai</span>
+    <div class="bar-canvas-wrap">
+      <canvas id="qs-canvas" width="700" height="200"></canvas>
+    </div>
+    <div class="log-box" id="qs-log"></div>
+  </div>
+</div>
+
+<!-- ============ THEORY ============ -->
+<div id="sec-theory" class="section">
+  <div class="card band-peach">
+    <h2>Perbandingan Algoritma</h2>
+    <table>
+      <tr><th>Algoritma</th><th>Best</th><th>Average</th><th>Worst</th><th>Ruang</th><th>Stable</th></tr>
+      <tr><td>Merge Sort (array)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n)</td><td>Ya</td></tr>
+      <tr><td>Merge Sort (linked list)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(log n)</td><td>Ya</td></tr>
+      <tr><td>Quick Sort (median-3)</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n²)*</td><td>O(log n)</td><td>Tidak</td></tr>
+    </table>
+    <p style="font-size:.85rem;color:var(--text-soft);margin-top:6px">*Dengan depth limiter + fallback, worst-case praktis dihindari.</p>
+
+    <h3>Mengapa tmpArray Tunggal Lebih Efisien?</h3>
+    <div class="box box-pink">
+      <strong>Versi berbasis slice</strong> membuat array baru setiap rekursi → O(n log n) alokasi memori total.<br>
+      <strong>Versi tmpArray tunggal</strong> hanya mengalokasi sekali O(n) di awal, lalu menggunakan indeks virtual untuk menunjuk segmen yang berbeda.
+    </div>
+
+    <h3>Fast-Slow Pointer — Cara Kerja</h3>
+    <div class="box box-lav">
+      midPoint bergerak 1 langkah, curNode bergerak 2 langkah. Saat curNode mencapai akhir list, midPoint tepat berada di tengah — tanpa perlu menghitung panjang list terlebih dahulu.
+    </div>
+
+    <h3>Dummy Node di Linked List Merge</h3>
+    <div class="box box-mint">
+      Dummy node menghilangkan pengecekan khusus untuk node pertama hasil merge. tail.next selalu bisa di-assign tanpa kondisi if/else tambahan. Tidak ada alokasi node baru — hanya pointer .next yang dimodifikasi.
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ─── TABS ─── */
+function showSec(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+/* ─── COLORS ─── */
+const C = {
+  normal:  '#dbd4f2',
+  compare: '#f5c9d5',
+  pivot:   '#fde0c4',
+  sorted:  '#c6ebd8',
+  text:    '#38303e',
+  border:  '#bab0e2',
+};
+
+/* ════════════════════════════════
+   MERGE SORT VISUALIZER
+════════════════════════════════ */
+let mergeArr=[], mergeSteps=[], mergeIdx=0;
+
+function initMerge() {
+  const raw = document.getElementById('merge-input').value;
+  mergeArr = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  mergeSteps = []; mergeIdx = 0;
+  generateMergeSteps([...mergeArr], 0, mergeArr.length-1);
+  document.getElementById('merge-log').innerHTML = '';
+  document.getElementById('merge-step-info').textContent = `0 / ${mergeSteps.length} langkah`;
+  drawBars('sort-canvas', mergeArr, {});
+}
+
+function generateMergeSteps(arr, first, last) {
+  if (first >= last) return;
+  const mid = (first+last)>>1;
+  generateMergeSteps(arr, first, mid);
+  generateMergeSteps(arr, mid+1, last);
+  // record merge step
+  mergeSteps.push({ type:'merge', arr:[...arr], first, mid, last });
+  // actually merge in arr
+  const tmp = [];
+  let a=first, b=mid+1;
+  while(a<=mid && b<=last) {
+    if(arr[a]<=arr[b]) tmp.push(arr[a++]);
+    else tmp.push(arr[b++]);
+  }
+  while(a<=mid) tmp.push(arr[a++]);
+  while(b<=last) tmp.push(arr[b++]);
+  for(let i=0;i<tmp.length;i++) arr[first+i]=tmp[i];
+  mergeSteps.push({ type:'result', arr:[...arr], first, last });
+}
+
+function mergeStepFwd() {
+  if(!mergeSteps.length){ initMerge(); return; }
+  if(mergeIdx >= mergeSteps.length) return;
+  const s = mergeSteps[mergeIdx++];
+  mergeArr = [...s.arr];
+  const hi = {};
+  if(s.type==='merge'){
+    for(let i=s.first;i<=s.mid;i++) hi[i]='compare';
+    for(let i=s.mid+1;i<=s.last;i++) hi[i]='pivot';
+  } else {
+    for(let i=s.first;i<=s.last;i++) hi[i]='sorted';
+  }
+  drawBars('sort-canvas', mergeArr, hi);
+  const msg = s.type==='merge'
+    ? `Menggabungkan [${s.first}..${s.mid}] dan [${s.mid+1}..${s.last}]`
+    : `Hasil merge [${s.first}..${s.last}]: [${mergeArr.slice(s.first,s.last+1).join(', ')}]`;
+  appendLog('merge-log', msg, s.type==='result'?'#287850':'#483880');
+  document.getElementById('merge-step-info').textContent = `${mergeIdx} / ${mergeSteps.length} langkah`;
+}
+
+let mergeAutoTimer=null;
+function mergeAuto(){
+  if(mergeAutoTimer) { clearInterval(mergeAutoTimer); mergeAutoTimer=null; return; }
+  if(!mergeSteps.length) initMerge();
+  mergeAutoTimer = setInterval(()=>{
+    if(mergeIdx>=mergeSteps.length){ clearInterval(mergeAutoTimer); mergeAutoTimer=null; return; }
+    mergeStepFwd();
+  }, 600);
+}
+
+/* ════════════════════════════════
+   LINKED LIST VISUALIZER
+════════════════════════════════ */
+let llData=[], llSteps=[], llIdx=0;
+
+function initLL(){
+  const raw = document.getElementById('ll-input').value;
+  llData = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  llSteps = [];
+  generateLLSteps([...llData]);
+  llIdx = 0;
+  document.getElementById('ll-log').innerHTML='';
+  document.getElementById('ll-step-info').textContent=`0 / ${llSteps.length} langkah`;
+  drawLL('ll-canvas', llData, -1, -1);
+}
+
+function generateLLSteps(arr){
+  // simulate merge sort on array index level for visualization
+  function msort(a, depth){
+    if(a.length<=1) return a;
+    const mid=Math.floor(a.length/2);
+    const left=a.slice(0,mid), right=a.slice(mid);
+    llSteps.push({type:'split', left:[...left], right:[...right], depth});
+    const sl=msort(left,depth+1), sr=msort(right,depth+1);
+    const merged=[];
+    let i=0,j=0;
+    while(i<sl.length&&j<sr.length){
+      llSteps.push({type:'compare', a:sl[i], b:sr[j], depth});
+      if(sl[i]<=sr[j]) merged.push(sl[i++]);
+      else merged.push(sr[j++]);
+    }
+    while(i<sl.length) merged.push(sl[i++]);
+    while(j<sr.length) merged.push(sr[j++]);
+    llSteps.push({type:'merged', arr:[...merged], depth});
+    return merged;
+  }
+  msort(arr, 0);
+  llSteps.push({type:'done', arr:[...arr].sort((a,b)=>a-b)});
+}
+
+function llStepFwd(){
+  if(!llSteps.length){initLL();return;}
+  if(llIdx>=llSteps.length) return;
+  const s=llSteps[llIdx++];
+  let msg='';
+  if(s.type==='split') msg=`Split: [${s.left.join(',')}] | [${s.right.join(',')}]`;
+  else if(s.type==='compare') msg=`Bandingkan: ${s.a} vs ${s.b} → ambil ${Math.min(s.a,s.b)}`;
+  else if(s.type==='merged') msg=`Merged: [${s.arr.join(', ')}]`;
+  else { msg='Selesai! List telah terurut.'; llData=[...s.arr]; }
+  if(s.type==='done') drawLL('ll-canvas',llData,-1,-1,true);
+  else if(s.arr) drawLL('ll-canvas',s.arr,-1,-1,false);
+  appendLog('ll-log',msg,s.type==='done'?'#287850':'#483880');
+  document.getElementById('ll-step-info').textContent=`${llIdx} / ${llSteps.length} langkah`;
+}
+
+let llAutoTimer=null;
+function llAuto(){
+  if(llAutoTimer){clearInterval(llAutoTimer);llAutoTimer=null;return;}
+  if(!llSteps.length) initLL();
+  llAutoTimer=setInterval(()=>{
+    if(llIdx>=llSteps.length){clearInterval(llAutoTimer);llAutoTimer=null;return;}
+    llStepFwd();
+  },500);
+}
+
+/* ════════════════════════════════
+   QUICK SORT VISUALIZER
+════════════════════════════════ */
+let qsArr=[], qsSteps=[], qsIdx=0;
+
+function initQS(){
+  const raw=document.getElementById('qs-input').value;
+  qsArr=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  qsSteps=[]; qsIdx=0;
+  generateQSSteps([...qsArr],0,qsArr.length-1);
+  document.getElementById('qs-log').innerHTML='';
+  document.getElementById('qs-step-info').textContent=`0 / ${qsSteps.length} langkah`;
+  drawBars('qs-canvas',qsArr,{});
+}
+
+function medianOfThree(arr,first,last){
+  const mid=(first+last)>>1;
+  if(arr[first]>arr[mid]){let t=arr[first];arr[first]=arr[mid];arr[mid]=t;}
+  if(arr[first]>arr[last]){let t=arr[first];arr[first]=arr[last];arr[last]=t;}
+  if(arr[mid]>arr[last]){let t=arr[mid];arr[mid]=arr[last];arr[last]=t;}
+  let t=arr[first];arr[first]=arr[mid];arr[mid]=t;
+}
+
+function generateQSSteps(arr,first,last){
+  if(first>=last){
+    if(first===last) qsSteps.push({arr:[...arr],hi:{[first]:'sorted'},msg:`Elemen [${first}] sudah di posisi akhir.`});
+    return;
+  }
+  medianOfThree(arr,first,last);
+  const pivot=arr[first];
+  qsSteps.push({arr:[...arr],hi:{[first]:'pivot'},msg:`Pivot median-of-three = ${pivot} di indeks ${first}`});
+
+  let left=first+1, right=last;
+  while(left<=right){
+    while(left<=right&&arr[left]<=pivot) left++;
+    while(left<=right&&arr[right]>pivot) right--;
+    if(left<right){
+      let t=arr[left];arr[left]=arr[right];arr[right]=t;
+      qsSteps.push({arr:[...arr],hi:{[left]:'compare',[right]:'compare',[first]:'pivot'},
+        msg:`Tukar arr[${left}]=${arr[left]} dan arr[${right}]=${arr[right]}`});
+    }
+  }
+  let t=arr[first];arr[first]=arr[right];arr[right]=t;
+  qsSteps.push({arr:[...arr],hi:{[right]:'sorted'},msg:`Pivot ${arr[right]} ditempatkan di indeks ${right}`});
+  generateQSSteps(arr,first,right-1);
+  generateQSSteps(arr,right+1,last);
+}
+
+function qsStepFwd(){
+  if(!qsSteps.length){initQS();return;}
+  if(qsIdx>=qsSteps.length) return;
+  const s=qsSteps[qsIdx++];
+  drawBars('qs-canvas',s.arr,s.hi);
+  appendLog('qs-log',s.msg,s.hi&&Object.values(s.hi).includes('sorted')?'#287850':'#804020');
+  document.getElementById('qs-step-info').textContent=`${qsIdx} / ${qsSteps.length} langkah`;
+}
+
+let qsAutoTimer=null;
+function qsAuto(){
+  if(qsAutoTimer){clearInterval(qsAutoTimer);qsAutoTimer=null;return;}
+  if(!qsSteps.length) initQS();
+  qsAutoTimer=setInterval(()=>{
+    if(qsIdx>=qsSteps.length){clearInterval(qsAutoTimer);qsAutoTimer=null;return;}
+    qsStepFwd();
+  },500);
+}
+
+/* ─── DRAW BARS ─── */
+function drawBars(canvasId, arr, hi){
+  const cv=document.getElementById(canvasId);
+  const cx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  cx.clearRect(0,0,W,H);
+  if(!arr.length) return;
+  const max=Math.max(...arr);
+  const bw=Math.min(60,(W-20)/arr.length-4);
+  const gap=(W-20)/(arr.length);
+  arr.forEach((v,i)=>{
+    const x=10+i*gap+(gap-bw)/2;
+    const bh=Math.max(20,(v/max)*(H-50));
+    const y=H-30-bh;
+    const type=hi[i]||'normal';
+    cx.fillStyle = type==='sorted'?C.sorted : type==='compare'?C.compare : type==='pivot'?C.pivot : C.normal;
+    cx.strokeStyle=C.border; cx.lineWidth=1.5;
+    cx.beginPath(); cx.roundRect(x,y,bw,bh,4); cx.fill(); cx.stroke();
+    cx.fillStyle=C.text; cx.font=`bold ${Math.min(13,bw*0.55)}px Times New Roman`;
+    cx.textAlign='center'; cx.fillText(v,x+bw/2,y-5);
+    cx.fillStyle='#999'; cx.font=`10px Times New Roman`;
+    cx.fillText(i,x+bw/2,H-14);
+  });
+  // legend
+  const items=[['Normal',C.normal],['Dibandingkan',C.compare],['Pivot',C.pivot],['Selesai',C.sorted]];
+  let lx=10;
+  items.forEach(([lbl,col])=>{
+    cx.fillStyle=col; cx.strokeStyle=C.border; cx.lineWidth=1;
+    cx.fillRect(lx,H-10,12,10); cx.strokeRect(lx,H-10,12,10);
+    cx.fillStyle='#666'; cx.font='9px Times New Roman'; cx.textAlign='left';
+    cx.fillText(lbl,lx+15,H-2); lx+=cx.measureText(lbl).width+32;
+  });
+}
+
+/* ─── DRAW LINKED LIST ─── */
+function drawLL(canvasId, arr, slow, fast, done=false){
+  const cv=document.getElementById(canvasId);
+  const cx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  cx.clearRect(0,0,W,H);
+  if(!arr||!arr.length) return;
+  const nw=52, nh=38, gap=20, startX=20, y=(H-nh)/2;
+  arr.forEach((v,i)=>{
+    const x=startX+i*(nw+gap);
+    if(x+nw>W) return;
+    cx.fillStyle=done?C.sorted:(i===slow?C.compare:i===fast?C.pivot:C.normal);
+    cx.strokeStyle=C.border; cx.lineWidth=1.5;
+    cx.beginPath(); cx.roundRect(x,y,nw*0.65,nh,6); cx.fill(); cx.stroke();
+    cx.fillStyle='#e8e0f0'; cx.strokeStyle=C.border;
+    cx.beginPath(); cx.roundRect(x+nw*0.65,y,nw*0.35,nh,6); cx.fill(); cx.stroke();
+    cx.fillStyle=C.text; cx.font='bold 13px Times New Roman'; cx.textAlign='center';
+    cx.fillText(v,x+nw*0.325,y+nh/2+5);
+    // arrow
+    if(i<arr.length-1){
+      const ax=x+nw+2, ay=y+nh/2;
+      cx.strokeStyle='#b8a8d8'; cx.lineWidth=1.5;
+      cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(ax+gap-4,ay); cx.stroke();
+      cx.fillStyle='#b8a8d8';
+      cx.beginPath(); cx.moveTo(ax+gap-4,ay); cx.lineTo(ax+gap-10,ay-4); cx.lineTo(ax+gap-10,ay+4); cx.fill();
+    } else {
+      cx.fillStyle='#bbb'; cx.font='12px Times New Roman'; cx.textAlign='center';
+      cx.fillText('null',x+nw*0.825,y+nh/2+5);
+    }
+  });
+}
+
+/* ─── LOG ─── */
+function appendLog(id, msg, color='#38303e'){
+  const el=document.getElementById(id);
+  el.innerHTML+=`<div style="color:${color}">${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+</script>
+</body>
+</html>

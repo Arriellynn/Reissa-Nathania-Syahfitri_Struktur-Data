@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExprHeapSorter – Visualisasi</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&display=swap');
+
+  :root {
+    --bg:          #f8f6fa;
+    --surface:     #ffffff;
+    --pink:        #f5c9d5;
+    --pink-d:      #e8a0b4;
+    --lavender:    #dbd4f2;
+    --lavender-d:  #bab0e2;
+    --mint:        #c6ebd8;
+    --mint-d:      #9dd4b6;
+    --peach:       #fde0c4;
+    --peach-d:     #f8c090;
+    --sky:         #c6e4f4;
+    --sky-d:       #96cce8;
+    --yellow:      #faf0be;
+    --yellow-d:    #f0d870;
+    --text:        #38303e;
+    --text-soft:   #6a5e74;
+    --border:      #e4daea;
+    --radius:      16px;
+    --radius-sm:   10px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Times New Roman', Times, serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.75;
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #f0eaf8 0%, #e8f4fc 50%, #eef8f0 100%);
+    padding: 56px 40px 46px;
+    text-align: center;
+    border-bottom: 2px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 20% 50%, rgba(219,212,242,.3) 0%, transparent 55%),
+                radial-gradient(ellipse at 80% 30%, rgba(198,235,216,.3) 0%, transparent 55%);
+    pointer-events: none;
+  }
+  .chapter-label {
+    font-size: .82rem; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--text-soft); margin-bottom: 10px;
+  }
+  header h1 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: clamp(2.1rem, 5vw, 3.5rem);
+    font-weight: 900; color: var(--text); line-height: 1.15; position: relative;
+  }
+  .header-sub {
+    margin-top: 12px; font-size: 1rem;
+    color: var(--text-soft); font-style: italic;
+  }
+  .pill-row {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    justify-content: center; margin-top: 24px; position: relative;
+  }
+  .pill {
+    padding: 5px 16px; border-radius: 50px; font-size: .8rem;
+    font-weight: bold; border: 1.5px solid transparent;
+  }
+  .pill-lav   { background: var(--lavender); border-color: var(--lavender-d); color: #483880; }
+  .pill-mint  { background: var(--mint);     border-color: var(--mint-d);     color: #286040; }
+  .pill-peach { background: var(--peach);    border-color: var(--peach-d);    color: #804020; }
+  .pill-sky   { background: var(--sky);      border-color: var(--sky-d);      color: #1a5880; }
+
+  .tabs-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(248,246,250,.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid var(--border);
+    display: flex; flex-wrap: wrap; gap: 4px;
+    padding: 10px 24px; justify-content: center;
+  }
+  .tab-btn {
+    padding: 7px 18px; border: 1.5px solid var(--border);
+    border-radius: 50px; background: var(--surface);
+    font-family: 'Times New Roman', serif; font-size: .82rem;
+    cursor: pointer; color: var(--text-soft);
+    transition: all .2s; font-weight: bold;
+  }
+  .tab-btn:hover, .tab-btn.active {
+    background: var(--lavender); border-color: var(--lavender-d); color: #483880;
+  }
+
+  main { max-width: 960px; margin: 0 auto; padding: 36px 22px 80px; }
+
+  .section { display: none; animation: fadeUp .3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card {
+    background: var(--surface); border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    box-shadow: 0 4px 20px rgba(100,80,120,.08);
+    padding: 30px 34px; margin-bottom: 26px;
+  }
+  .card h2 {
+    font-family: 'Playfair Display', 'Times New Roman', serif;
+    font-size: 1.5rem; font-weight: 700; color: var(--text);
+    margin-bottom: 12px; border-bottom: 2px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .card h3 { font-size: 1.08rem; font-weight: bold; color: var(--text); margin: 18px 0 8px; }
+  .card p  { margin-bottom: 10px; font-size: .98rem; }
+
+  .band-lav   { border-top: 5px solid var(--lavender-d); }
+  .band-mint  { border-top: 5px solid var(--mint-d); }
+  .band-peach { border-top: 5px solid var(--peach-d); }
+  .band-sky   { border-top: 5px solid var(--sky-d); }
+
+  pre {
+    background: #f8f4fc; border: 1.5px solid #ddd4e8;
+    border-radius: var(--radius-sm); padding: 18px 22px;
+    font-family: 'Courier New', monospace; font-size: .88rem;
+    line-height: 1.7; overflow-x: auto; margin: 12px 0; color: #281640;
+  }
+  .kw { color: #8830a0; font-weight: bold; }
+  .fn { color: #1860a0; font-weight: bold; }
+  .cm { color: #888; font-style: italic; }
+  .nm { color: #c05010; }
+
+  .box {
+    border-radius: var(--radius-sm); padding: 14px 18px;
+    margin: 12px 0; border-left: 4px solid transparent; font-size: .96rem;
+  }
+  .box-lav   { background: #f4f0fc; border-color: var(--lavender-d); }
+  .box-mint  { background: #f0faf4; border-color: var(--mint-d); }
+  .box-peach { background: #fff6ee; border-color: var(--peach-d); }
+  .box-sky   { background: #f0f8fe; border-color: var(--sky-d); }
+  .box-pink  { background: #fef0f4; border-color: var(--pink-d); }
+
+  .controls {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 14px 0;
+  }
+  .btn {
+    padding: 7px 20px; border-radius: 50px;
+    border: 1.5px solid transparent;
+    font-family: 'Times New Roman', serif; font-size: .88rem;
+    font-weight: bold; cursor: pointer; transition: all .18s;
+  }
+  .btn-lav   { background: var(--lavender); border-color: var(--lavender-d); color: #483880; }
+  .btn-lav:hover   { background: var(--lavender-d); color: #fff; }
+  .btn-mint  { background: var(--mint);     border-color: var(--mint-d);     color: #286040; }
+  .btn-mint:hover  { background: var(--mint-d);     color: #fff; }
+  .btn-peach { background: var(--peach);    border-color: var(--peach-d);    color: #804020; }
+  .btn-peach:hover { background: var(--peach-d);    color: #fff; }
+  .btn-sky   { background: var(--sky);      border-color: var(--sky-d);      color: #1a5880; }
+  .btn-sky:hover   { background: var(--sky-d);      color: #fff; }
+  .btn-pink  { background: var(--pink);     border-color: var(--pink-d);     color: #882040; }
+  .btn-pink:hover  { background: var(--pink-d);      color: #fff; }
+
+  input[type=text] {
+    padding: 6px 12px; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    font-family: 'Times New Roman', serif; font-size: .95rem;
+    background: white; color: var(--text);
+  }
+
+  .step-info {
+    font-size: .88rem; color: var(--text-soft);
+    padding: 6px 14px; background: var(--yellow);
+    border-radius: 50px; border: 1.5px solid var(--yellow-d);
+    display: inline-block; font-weight: bold;
+  }
+
+  .log-box {
+    background: white; border-radius: 8px;
+    border: 1.5px solid var(--border);
+    padding: 10px 16px; font-family: 'Courier New', monospace;
+    font-size: .84rem; line-height: 1.9; min-height: 48px;
+    max-height: 180px; overflow-y: auto;
+  }
+
+  /* TREE CANVAS */
+  .canvas-wrap {
+    overflow-x: auto;
+    background: #fdf8ff;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    padding: 12px; margin: 14px 0;
+  }
+  canvas { display: block; margin: 0 auto; background: transparent; }
+
+  /* HEAP ARRAY VIZ */
+  .heap-array {
+    display: flex; gap: 5px; flex-wrap: wrap; margin: 12px 0;
+  }
+  .heap-cell {
+    width: 48px; height: 48px;
+    border-radius: 8px; border: 1.5px solid var(--border);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: 'Courier New', monospace;
+    font-size: .85rem; font-weight: bold;
+    transition: all .3s; background: var(--surface);
+  }
+  .heap-cell .cidx { font-size: .62rem; color: var(--text-soft); font-weight: normal; }
+  .heap-cell.root    { background: var(--peach);    border-color: var(--peach-d); }
+  .heap-cell.active  { background: var(--lavender); border-color: var(--lavender-d); }
+  .heap-cell.swapped { background: var(--pink);     border-color: var(--pink-d); }
+  .heap-cell.sorted  { background: var(--mint);     border-color: var(--mint-d); }
+
+  table { width: 100%; border-collapse: collapse; font-size: .93rem; margin: 12px 0; }
+  th { background: var(--lavender); padding: 9px 12px; text-align: left;
+       font-weight: bold; border: 1px solid var(--border); }
+  td { padding: 8px 12px; border: 1px solid var(--border); }
+  tr:nth-child(even) td { background: #f6f2fc; }
+
+  @media (max-width:600px) {
+    header { padding: 36px 18px 32px; }
+    .card  { padding: 20px 16px; }
+    .tab-btn { font-size: .74rem; padding: 5px 11px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="chapter-label">Struktur Data &nbsp;·&nbsp; Binary Tree &amp; Heap</div>
+  <h1>ExprHeapSorter<br>
+    <small style="font-size:.48em;font-weight:400;color:var(--text-soft)">Expression Tree · Max-Heap · Heapsort In-Place</small>
+  </h1>
+  <p class="header-sub">Visualisasi interaktif pohon ekspresi, konstruksi heap, dan heapsort in-place</p>
+  <div class="pill-row">
+    <span class="pill pill-lav">Expression Tree</span>
+    <span class="pill pill-mint">Max-Heap</span>
+    <span class="pill pill-peach">Heapsort In-Place</span>
+    <span class="pill pill-sky">Complete Tree Validator</span>
+  </div>
+</header>
+
+<nav class="tabs-bar">
+  <button class="tab-btn active" onclick="showSec('expr')">Expression Tree</button>
+  <button class="tab-btn" onclick="showSec('heap')">Max-Heap</button>
+  <button class="tab-btn" onclick="showSec('hsort')">Heapsort</button>
+  <button class="tab-btn" onclick="showSec('valid')">Complete Tree</button>
+  <button class="tab-btn" onclick="showSec('theory')">Teori Singkat</button>
+</nav>
+
+<main>
+
+<!-- ============ EXPRESSION TREE ============ -->
+<div id="sec-expr" class="section active">
+  <div class="card band-lav">
+    <h2>Expression Tree Builder</h2>
+    <p>Pohon ekspresi dibangun secara rekursif dari ekspresi berparentesis penuh menggunakan antrian token (deque). Setiap <code>(</code> memicu pembuatan node operator dengan dua anak.</p>
+    <pre><span class="kw">def</span> <span class="fn">_build_tree</span>(self, tokens):
+    token = tokens.popleft()
+    <span class="kw">if</span> token == <span class="nm">'('</span>:
+        left     = self._build_tree(tokens)  <span class="cm"># subtree kiri</span>
+        operator = tokens.popleft()          <span class="cm"># ambil operator</span>
+        right    = self._build_tree(tokens)  <span class="cm"># subtree kanan</span>
+        tokens.popleft()                     <span class="cm"># konsumsi ')'</span>
+        <span class="kw">return</span> {<span class="nm">'val'</span>: operator, <span class="nm">'left'</span>: left, <span class="nm">'right'</span>: right}
+    <span class="kw">else</span>:
+        <span class="kw">return</span> {<span class="nm">'val'</span>: float(token), <span class="nm">'left'</span>: <span class="nm">None</span>, <span class="nm">'right'</span>: <span class="nm">None</span>}</pre>
+
+    <h3>Coba Bangun Pohon Ekspresi</h3>
+    <div class="controls">
+      <input type="text" id="expr-input" value="((8*5)+(9/(7-4)))" style="width:260px;">
+      <button class="btn btn-lav" onclick="buildExprTree()">Bangun Pohon</button>
+    </div>
+    <div class="box box-lav" id="expr-result" style="display:none;"></div>
+    <div class="canvas-wrap">
+      <canvas id="expr-canvas" width="680" height="280"></canvas>
+    </div>
+    <h3>Traversal Postorder (Notasi Postfix)</h3>
+    <div id="postorder-result" class="log-box" style="min-height:36px;"></div>
+    <div class="box box-mint" style="margin-top:12px;">
+      <strong>Mengapa postorder menghasilkan postfix otomatis?</strong><br>
+      Postorder mengunjungi kiri, kanan, lalu akar. Operator dicetak setelah kedua operandnya — persis definisi notasi postfix. Inorder memerlukan tanda kurung eksplisit karena operator dicetak di antara operand dan urutan prioritas bisa ambigu.
+    </div>
+  </div>
+</div>
+
+<!-- ============ MAX-HEAP ============ -->
+<div id="sec-heap" class="section">
+  <div class="card band-mint">
+    <h2>Konstruksi Max-Heap In-Place</h2>
+    <p>Max-heap dibangun dari array biasa menggunakan metode <strong>bottom-up sift-down</strong>, mulai dari node internal terakhir (indeks n//2 - 1) ke atas.</p>
+    <pre><span class="cm"># Fase 1: Build max-heap</span>
+<span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n // <span class="nm">2</span> - <span class="nm">1</span>, -<span class="nm">1</span>, -<span class="nm">1</span>):
+    self._sift_down(arr, n, i)
+
+<span class="cm"># sift_down: left=2i+1, right=2i+2</span>
+<span class="kw">while</span> largest != idx:
+    arr[idx], arr[largest] = arr[largest], arr[idx]
+    idx = largest</pre>
+
+    <h3>Visualisasi Heap sebagai Pohon</h3>
+    <div class="controls">
+      <input type="text" id="heap-input" value="3,19,7,1,12,5,28,43" style="width:240px;">
+      <button class="btn btn-mint" onclick="initHeap()">Bangun Heap</button>
+      <button class="btn btn-lav" onclick="heapStepFwd()">Langkah Berikutnya</button>
+      <button class="btn btn-peach" onclick="heapAuto()">Jalankan Semua</button>
+    </div>
+    <span class="step-info" id="heap-step-info">Masukkan data lalu tekan Bangun Heap</span>
+    <div class="heap-array" id="heap-arr-display"></div>
+    <div class="canvas-wrap">
+      <canvas id="heap-canvas" width="680" height="260"></canvas>
+    </div>
+    <div class="log-box" id="heap-log"></div>
+    <div class="box box-peach" style="margin-top:14px;">
+      <strong>Rumus indeks hanya valid pada Complete Binary Tree.</strong><br>
+      parent = (i-1)//2, left = 2i+1, right = 2i+2. Jika ada "lubang" (node tidak terisi), rumus ini menghasilkan indeks yang salah dan heap order property tidak bisa dijamin.
+    </div>
+  </div>
+</div>
+
+<!-- ============ HEAPSORT ============ -->
+<div id="sec-hsort" class="section">
+  <div class="card band-peach">
+    <h2>Heapsort In-Place</h2>
+    <p>Setelah max-heap terbentuk, elemen terbesar (root) ditukar ke akhir array, lalu heap diperkecil satu elemen dan sift-down dijalankan dari root.</p>
+    <pre><span class="cm"># Fase 2: Ekstraksi berulang</span>
+<span class="kw">for</span> end <span class="kw">in</span> <span class="fn">range</span>(n - <span class="nm">1</span>, <span class="nm">0</span>, -<span class="nm">1</span>):
+    arr[<span class="nm">0</span>], arr[end] = arr[end], arr[<span class="nm">0</span>]  <span class="cm"># swap root ke akhir</span>
+    self._sift_down(arr, end, <span class="nm">0</span>)           <span class="cm"># pulihkan heap</span></pre>
+
+    <div class="controls">
+      <input type="text" id="hs-input" value="43,12,7,3,19,5,1,28" style="width:240px;">
+      <button class="btn btn-peach" onclick="initHS()">Mulai Sort</button>
+      <button class="btn btn-lav" onclick="hsStepFwd()">Langkah Berikutnya</button>
+      <button class="btn btn-mint" onclick="hsAuto()">Jalankan Semua</button>
+    </div>
+    <span class="step-info" id="hs-step-info">Masukkan data lalu tekan Mulai Sort</span>
+    <div class="heap-array" id="hs-arr-display"></div>
+    <div class="canvas-wrap">
+      <canvas id="hs-canvas" width="680" height="260"></canvas>
+    </div>
+    <div class="log-box" id="hs-log"></div>
+  </div>
+</div>
+
+<!-- ============ COMPLETE TREE VALIDATOR ============ -->
+<div id="sec-valid" class="section">
+  <div class="card band-sky">
+    <h2>Complete Binary Tree Validator</h2>
+    <p>Memvalidasi apakah suatu array dapat dipetakan ke complete binary tree tanpa "lubang". Semua node harus terisi level-by-level dari kiri ke kanan.</p>
+    <pre><span class="kw">def</span> <span class="fn">is_complete_tree</span>(self, arr):
+    n = <span class="fn">len</span>(arr)
+    found_none = <span class="nm">False</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):
+        left, right = <span class="nm">2</span>*i+<span class="nm">1</span>, <span class="nm">2</span>*i+<span class="nm">2</span>
+        <span class="kw">if</span> left &lt; n:
+            <span class="kw">if</span> found_none: <span class="kw">return</span> <span class="nm">False</span>  <span class="cm"># ada lubang!</span>
+        <span class="kw">else</span>:
+            found_none = <span class="nm">True</span>
+        <span class="kw">if</span> right &lt; n:
+            <span class="kw">if</span> found_none: <span class="kw">return</span> <span class="nm">False</span>
+        <span class="kw">else</span>:
+            found_none = <span class="nm">True</span>
+    <span class="kw">return</span> <span class="nm">True</span></pre>
+
+    <div class="controls">
+      <input type="text" id="valid-input" value="1,2,3,4,5,6,7" style="width:220px;">
+      <button class="btn btn-sky" onclick="validateTree()">Validasi</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="valid-canvas" width="680" height="260"></canvas>
+    </div>
+    <div id="valid-result" class="box" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ============ THEORY ============ -->
+<div id="sec-theory" class="section">
+  <div class="card band-lav">
+    <h2>Perbandingan &amp; Analisis</h2>
+    <table>
+      <tr><th>Aspek</th><th>Simple Heapsort</th><th>In-Place Heapsort</th></tr>
+      <tr><td>Ruang tambahan</td><td>O(n) — array sementara</td><td>O(1) — hanya variabel indeks</td></tr>
+      <tr><td>Cache locality</td><td>Lebih baik (akses sekuensial)</td><td>Kurang baik (akses acak)</td></tr>
+      <tr><td>Risiko overflow</td><td>Tinggi pada RAM terbatas</td><td>Sangat rendah</td></tr>
+      <tr><td>Kompleksitas waktu</td><td>O(n log n)</td><td>O(n log n)</td></tr>
+      <tr><td>Stabilitas</td><td>Tidak stabil</td><td>Tidak stabil</td></tr>
+    </table>
+
+    <h3>Mengapa Heapsort Tetap O(n log n)?</h3>
+    <div class="box box-lav">
+      Setiap operasi sift-down membutuhkan O(log n) langkah (tinggi pohon). Fase build-heap memanggil sift-down sebanyak n/2 kali, dan fase ekstraksi memanggil sift-down sebanyak n-1 kali. Total: O(n log n), meski swap dilakukan berulang pada array yang sama.
+    </div>
+
+    <h3>Postorder vs Inorder Traversal</h3>
+    <div class="box box-mint">
+      <strong>Postorder</strong> menghasilkan notasi postfix secara otomatis karena operator selalu dicetak setelah kedua operandnya — sesuai urutan kunjungan kiri-kanan-akar.<br><br>
+      <strong>Inorder</strong> memerlukan tanda kurung eksplisit karena operator dicetak di tengah operand. Tanpa kurung, ekspresi seperti <code>3 + 4 * 2</code> menjadi ambigu.
+    </div>
+
+    <h3>Batas Bawah Comparison Sort — Ω(n log n)</h3>
+    <div class="box box-peach">
+      Heapsort tidak melanggar batas ini karena heapsort adalah <em>comparison-based sort</em>. Setiap perbandingan elemen tetap menentukan alur eksekusi. Batas Ω(n log n) berlaku untuk semua algoritma yang hanya menggunakan perbandingan, termasuk heapsort.
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+/* ─── TABS ─── */
+function showSec(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+/* ─── COLOR PALETTE ─── */
+const C = {
+  node:    '#dbd4f2',
+  op:      '#fde0c4',
+  leaf:    '#c6ebd8',
+  active:  '#f5c9d5',
+  sorted:  '#c6ebd8',
+  root:    '#fde0c4',
+  border:  '#bab0e2',
+  text:    '#38303e',
+  edge:    '#c4b8dc',
+};
+
+/* ══════════════════════════════════════
+   EXPRESSION TREE
+══════════════════════════════════════ */
+let exprRoot = null;
+
+function tokenize(expr){
+  const tokens = [];
+  let i = 0;
+  expr = expr.replace(/\s/g,'');
+  while(i < expr.length){
+    const ch = expr[i];
+    if('()+-*/'.includes(ch)){ tokens.push(ch); i++; }
+    else if(ch.match(/\d/)){
+      let j=i; while(j<expr.length && expr[j].match(/[\d.]/)) j++;
+      tokens.push(expr.slice(i,j)); i=j;
+    } else i++;
+  }
+  return tokens;
+}
+
+function buildTree(tokens){
+  if(!tokens.length) return null;
+  const tok = tokens.shift();
+  if(tok === '('){
+    const left = buildTree(tokens);
+    const op   = tokens.shift();
+    const right= buildTree(tokens);
+    if(tokens[0]===')') tokens.shift();
+    return {val:op, left, right};
+  } else {
+    return {val:parseFloat(tok), left:null, right:null};
+  }
+}
+
+function evalTree(node){
+  if(!node) return 0;
+  if(node.left===null) return node.val;
+  const l=evalTree(node.left), r=evalTree(node.right);
+  if(node.val==='+') return l+r;
+  if(node.val==='-') return l-r;
+  if(node.val==='*') return l*r;
+  if(node.val==='/'){
+    if(r===0) throw new Error('Division by zero');
+    return l/r;
+  }
+  return 0;
+}
+
+function postorder(node, arr=[]){
+  if(!node) return arr;
+  postorder(node.left, arr);
+  postorder(node.right, arr);
+  arr.push(node.val);
+  return arr;
+}
+
+function buildExprTree(){
+  const raw = document.getElementById('expr-input').value;
+  const tokens = tokenize(raw);
+  try {
+    exprRoot = buildTree(tokens);
+    const val = evalTree(exprRoot);
+    const resEl = document.getElementById('expr-result');
+    resEl.style.display='block';
+    resEl.className='box box-mint';
+    resEl.innerHTML=`Hasil evaluasi: <strong>${raw} = ${val % 1 === 0 ? val : val.toFixed(4)}</strong>`;
+    drawExprTree('expr-canvas', exprRoot);
+    const po = postorder(exprRoot);
+    document.getElementById('postorder-result').innerHTML =
+      `Postorder (Postfix): <strong>${po.join('  ')}</strong>`;
+  } catch(e){
+    const resEl = document.getElementById('expr-result');
+    resEl.style.display='block';
+    resEl.className='box box-peach';
+    resEl.innerHTML=`Error: ${e.message}`;
+  }
+}
+
+function drawExprTree(canvasId, root){
+  const cv = document.getElementById(canvasId);
+  const cx = cv.getContext('2d');
+  cx.clearRect(0,0,cv.width,cv.height);
+  if(!root) return;
+
+  // Assign positions
+  function assignPos(node, depth, left, right){
+    if(!node) return;
+    node._x = (left+right)/2;
+    node._y = 30 + depth*60;
+    assignPos(node.left,  depth+1, left,  (left+right)/2);
+    assignPos(node.right, depth+1, (left+right)/2, right);
+  }
+  assignPos(root, 0, 0, cv.width);
+
+  // Draw edges first
+  function drawEdges(node){
+    if(!node) return;
+    if(node.left){
+      cx.strokeStyle=C.edge; cx.lineWidth=1.8;
+      cx.beginPath(); cx.moveTo(node._x,node._y); cx.lineTo(node.left._x,node.left._y); cx.stroke();
+      drawEdges(node.left);
+    }
+    if(node.right){
+      cx.strokeStyle=C.edge; cx.lineWidth=1.8;
+      cx.beginPath(); cx.moveTo(node._x,node._y); cx.lineTo(node.right._x,node.right._y); cx.stroke();
+      drawEdges(node.right);
+    }
+  }
+  drawEdges(root);
+
+  // Draw nodes
+  function drawNodes(node){
+    if(!node) return;
+    const r=22;
+    const isLeaf = node.left===null;
+    cx.fillStyle = isLeaf ? C.leaf : C.op;
+    cx.strokeStyle = C.border; cx.lineWidth=1.8;
+    cx.beginPath(); cx.arc(node._x,node._y,r,0,Math.PI*2); cx.fill(); cx.stroke();
+    cx.fillStyle=C.text; cx.font='bold 13px Times New Roman'; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(String(node.val), node._x, node._y);
+    drawNodes(node.left);
+    drawNodes(node.right);
+  }
+  drawNodes(root);
+}
+
+// Auto-build on load
+window.addEventListener('load', buildExprTree);
+
+/* ══════════════════════════════════════
+   MAX-HEAP
+══════════════════════════════════════ */
+let heapArr=[], heapSteps=[], heapIdx=0;
+
+function initHeap(){
+  const raw = document.getElementById('heap-input').value;
+  heapArr = raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  heapSteps=[]; heapIdx=0;
+  generateHeapSteps([...heapArr]);
+  document.getElementById('heap-log').innerHTML='';
+  document.getElementById('heap-step-info').textContent=`0 / ${heapSteps.length} langkah`;
+  renderHeapArr('heap-arr-display', heapArr, {});
+  drawHeapTree('heap-canvas', heapArr, {});
+}
+
+function siftDownSim(arr, n, idx, steps){
+  while(true){
+    let largest=idx, l=2*idx+1, r=2*idx+2;
+    if(l<n && arr[l]>arr[largest]) largest=l;
+    if(r<n && arr[r]>arr[largest]) largest=r;
+    if(largest===idx) break;
+    steps.push({arr:[...arr], hi:{[idx]:'active',[largest]:'swapped'}, msg:`Sift-down: tukar arr[${idx}]=${arr[idx]} dengan arr[${largest}]=${arr[largest]}`});
+    [arr[idx],arr[largest]]=[arr[largest],arr[idx]];
+    steps.push({arr:[...arr], hi:{[largest]:'active'}, msg:`Setelah swap: arr[${largest}]=${arr[largest]}`});
+    idx=largest;
+  }
+}
+
+function generateHeapSteps(arr){
+  const n=arr.length;
+  for(let i=Math.floor(n/2)-1;i>=0;i--){
+    heapSteps.push({arr:[...arr],hi:{[i]:'root'},msg:`sift-down dari indeks ${i} (nilai ${arr[i]})`});
+    siftDownSim(arr,n,i,heapSteps);
+  }
+  heapSteps.push({arr:[...arr],hi:{},msg:`Max-heap selesai dibangun. Root = ${arr[0]}`});
+}
+
+function heapStepFwd(){
+  if(!heapSteps.length){initHeap();return;}
+  if(heapIdx>=heapSteps.length) return;
+  const s=heapSteps[heapIdx++];
+  heapArr=[...s.arr];
+  renderHeapArr('heap-arr-display',heapArr,s.hi);
+  drawHeapTree('heap-canvas',heapArr,s.hi);
+  appendLog('heap-log',s.msg, s.msg.includes('selesai')?'#286040':'#483880');
+  document.getElementById('heap-step-info').textContent=`${heapIdx} / ${heapSteps.length} langkah`;
+}
+
+let heapAutoTimer=null;
+function heapAuto(){
+  if(heapAutoTimer){clearInterval(heapAutoTimer);heapAutoTimer=null;return;}
+  if(!heapSteps.length) initHeap();
+  heapAutoTimer=setInterval(()=>{
+    if(heapIdx>=heapSteps.length){clearInterval(heapAutoTimer);heapAutoTimer=null;return;}
+    heapStepFwd();
+  },600);
+}
+
+/* ══════════════════════════════════════
+   HEAPSORT
+══════════════════════════════════════ */
+let hsArr=[], hsSteps=[], hsIdx=0;
+
+function initHS(){
+  const raw=document.getElementById('hs-input').value;
+  hsArr=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  hsSteps=[]; hsIdx=0;
+  generateHSSteps([...hsArr]);
+  document.getElementById('hs-log').innerHTML='';
+  document.getElementById('hs-step-info').textContent=`0 / ${hsSteps.length} langkah`;
+  renderHeapArr('hs-arr-display',hsArr,{});
+  drawHeapTree('hs-canvas',hsArr,{});
+}
+
+function generateHSSteps(arr){
+  const n=arr.length;
+  // Phase 1: build heap
+  for(let i=Math.floor(n/2)-1;i>=0;i--) siftDownSim(arr,n,i,hsSteps);
+  hsSteps.push({arr:[...arr],hi:{[0]:'root'},msg:`Heap terbangun. Root max = ${arr[0]}`,sortedFrom:n});
+
+  // Phase 2: extract
+  const sorted=[];
+  for(let end=n-1;end>0;end--){
+    hsSteps.push({arr:[...arr],hi:{[0]:'swapped',[end]:'sorted'},msg:`Tukar root ${arr[0]} ke posisi ${end}`,sortedFrom:end});
+    [arr[0],arr[end]]=[arr[end],arr[0]];
+    sorted.unshift(end);
+    hsSteps.push({arr:[...arr],hi:{[0]:'active'},msg:`sift-down ukuran heap = ${end}`,sortedFrom:end});
+    siftDownSim(arr,end,0,hsSteps);
+  }
+  hsSteps.push({arr:[...arr],hi:{},msg:`Heapsort selesai: [${arr.join(', ')}]`,sortedFrom:0});
+}
+
+function hsStepFwd(){
+  if(!hsSteps.length){initHS();return;}
+  if(hsIdx>=hsSteps.length) return;
+  const s=hsSteps[hsIdx++];
+  hsArr=[...s.arr];
+  const hi={...s.hi};
+  const sf=s.sortedFrom!==undefined?s.sortedFrom:hsArr.length;
+  for(let i=sf;i<hsArr.length;i++) hi[i]='sorted';
+  renderHeapArr('hs-arr-display',hsArr,hi,sf);
+  drawHeapTree('hs-canvas',hsArr,hi,sf);
+  appendLog('hs-log',s.msg,s.msg.includes('selesai')?'#286040':'#804020');
+  document.getElementById('hs-step-info').textContent=`${hsIdx} / ${hsSteps.length} langkah`;
+}
+
+let hsAutoTimer=null;
+function hsAuto(){
+  if(hsAutoTimer){clearInterval(hsAutoTimer);hsAutoTimer=null;return;}
+  if(!hsSteps.length) initHS();
+  hsAutoTimer=setInterval(()=>{
+    if(hsIdx>=hsSteps.length){clearInterval(hsAutoTimer);hsAutoTimer=null;return;}
+    hsStepFwd();
+  },500);
+}
+
+/* ══════════════════════════════════════
+   COMPLETE TREE VALIDATOR
+══════════════════════════════════════ */
+function validateTree(){
+  const raw=document.getElementById('valid-input').value;
+  const arr=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n));
+  const n=arr.length;
+  let complete=true, holeAt=-1;
+  let foundNone=false;
+  for(let i=0;i<n;i++){
+    const l=2*i+1, r=2*i+2;
+    if(l<n){ if(foundNone){complete=false;holeAt=l;break;} }
+    else foundNone=true;
+    if(r<n){ if(foundNone){complete=false;holeAt=r;break;} }
+    else foundNone=true;
+  }
+  drawValidTree('valid-canvas',arr,complete,holeAt);
+  const resEl=document.getElementById('valid-result');
+  resEl.style.display='block';
+  resEl.className=complete?'box box-mint':'box box-peach';
+  resEl.innerHTML=complete
+    ? `Array [${arr.join(', ')}] MEMENUHI properti complete binary tree. Semua ${n} node terisi level-by-level.`
+    : `Array [${arr.join(', ')}] TIDAK memenuhi properti complete binary tree. Ditemukan "lubang" pada indeks ${holeAt}.`;
+}
+
+function drawValidTree(canvasId,arr,complete,holeAt){
+  const cv=document.getElementById(canvasId);
+  const cx=cv.getContext('2d');
+  cx.clearRect(0,0,cv.width,cv.height);
+  const n=arr.length;
+  if(!n) return;
+
+  function pos(i){ const depth=Math.floor(Math.log2(i+1));
+    const levelStart=Math.pow(2,depth)-1, levelCount=Math.pow(2,depth);
+    const posInLevel=i-levelStart;
+    return { x:cv.width*(posInLevel+0.5)/levelCount, y:30+depth*60 }; }
+
+  // edges
+  for(let i=1;i<n;i++){
+    const p=Math.floor((i-1)/2);
+    const {x:px,y:py}=pos(p), {x:cx2,y:cy2}=pos(i);
+    cx.strokeStyle=C.edge; cx.lineWidth=1.8;
+    cx.beginPath(); cx.moveTo(px,py); cx.lineTo(cx2,cy2); cx.stroke();
+  }
+
+  // nodes
+  for(let i=0;i<n;i++){
+    const {x,y}=pos(i);
+    cx.fillStyle= i===0?C.root : complete?C.leaf : (i===holeAt?'#f8c0c0':C.node);
+    cx.strokeStyle=C.border; cx.lineWidth=1.8;
+    cx.beginPath(); cx.arc(x,y,22,0,Math.PI*2); cx.fill(); cx.stroke();
+    cx.fillStyle=C.text; cx.font='bold 13px Times New Roman';
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(arr[i],x,y);
+    cx.fillStyle='#999'; cx.font='10px Times New Roman';
+    cx.fillText(`[${i}]`,x,y+32);
+  }
+}
+
+/* ══════════════════════════════════════
+   SHARED DRAW HELPERS
+══════════════════════════════════════ */
+function renderHeapArr(elId, arr, hi, sortedFrom){
+  const cont=document.getElementById(elId); cont.innerHTML='';
+  arr.forEach((v,i)=>{
+    const cell=document.createElement('div');
+    cell.className='heap-cell';
+    const sf=sortedFrom!==undefined?sortedFrom:arr.length;
+    if(i>=sf) cell.classList.add('sorted');
+    else if(hi[i]==='root')    cell.classList.add('root');
+    else if(hi[i]==='active')  cell.classList.add('active');
+    else if(hi[i]==='swapped') cell.classList.add('swapped');
+    cell.innerHTML=`${v}<span class="cidx">[${i}]</span>`;
+    cont.appendChild(cell);
+  });
+}
+
+function drawHeapTree(canvasId, arr, hi, sortedFrom){
+  const cv=document.getElementById(canvasId);
+  const cx=cv.getContext('2d');
+  cx.clearRect(0,0,cv.width,cv.height);
+  const n=arr.length;
+  const sf=sortedFrom!==undefined?sortedFrom:n;
+  if(!n) return;
+
+  function pos(i){
+    const depth=Math.floor(Math.log2(i+1));
+    const levelStart=Math.pow(2,depth)-1, levelCount=Math.pow(2,depth);
+    const posInLevel=i-levelStart;
+    return {x:cv.width*(posInLevel+0.5)/levelCount, y:28+depth*56};
+  }
+
+  // edges
+  for(let i=1;i<n;i++){
+    const p=Math.floor((i-1)/2);
+    const {x:px,y:py}=pos(p), {x:cx2,y:cy2}=pos(i);
+    cx.strokeStyle= i>=sf?'#d0e8d0':C.edge; cx.lineWidth=1.8;
+    cx.beginPath(); cx.moveTo(px,py); cx.lineTo(cx2,cy2); cx.stroke();
+  }
+
+  // nodes
+  for(let i=0;i<n;i++){
+    const {x,y}=pos(i), r=20;
+    let fill = i>=sf ? C.sorted
+      : hi[i]==='root'    ? C.root
+      : hi[i]==='active'  ? C.active
+      : hi[i]==='swapped' ? '#f5c9d5'
+      : i===0 ? C.op : C.node;
+    cx.fillStyle=fill; cx.strokeStyle=C.border; cx.lineWidth=1.8;
+    cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2); cx.fill(); cx.stroke();
+    cx.fillStyle=C.text; cx.font='bold 12px Times New Roman';
+    cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(arr[i],x,y);
+    cx.fillStyle='#aaa'; cx.font='9px Times New Roman';
+    cx.fillText(`[${i}]`,x,y+28);
+  }
+}
+
+function appendLog(id,msg,color='#38303e'){
+  const el=document.getElementById(id);
+  el.innerHTML+=`<div style="color:${color}">${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+</script>
+</body>
+</html>
